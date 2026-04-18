@@ -26,3 +26,12 @@ app_service_sku = "B1"
 
 # Log Analytics retention
 log_retention_days = 30
+
+# GitHub OAuth App — create at github.com/settings/developers
+# Set callback URL to: https://<your-app>.azurewebsites.net/api/github/callback
+github_client_id     = ""
+github_client_secret = ""   # stored in Key Vault at deploy time
+
+# JWT session signing secret — minimum 32 characters
+# Generate with: openssl rand -hex 32
+jwt_secret = ""

@@ -69,3 +69,28 @@ variable "log_retention_days" {
   type        = number
   default     = 30
 }
+
+variable "github_client_id" {
+  description = "GitHub OAuth App client ID. Create one at github.com/settings/developers."
+  type        = string
+  default     = ""
+}
+
+variable "github_client_secret" {
+  description = "GitHub OAuth App client secret. Stored in Key Vault; never written to state in plaintext."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "jwt_secret" {
+  description = "Random secret (min 32 chars) used to sign session JWT cookies. Generate with: openssl rand -hex 32"
+  type        = string
+  sensitive   = true
+  default     = ""
+
+  validation {
+    condition     = length(var.jwt_secret) == 0 || length(var.jwt_secret) >= 32
+    error_message = "jwt_secret must be at least 32 characters."
+  }
+}

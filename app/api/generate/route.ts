@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AzureOpenAI } from 'openai';
 import { buildSystemPrompt } from '@/lib/prompts';
-import { BlueprintType, ChatPhase, ARTIFACT_MARKER } from '@/lib/types';
+import { BlueprintType, ChatPhase, GitHubContext, ARTIFACT_MARKER } from '@/lib/types';
 
-export const runtime = 'nodejs';
+export const runtime    = 'nodejs';
 export const maxDuration = 60;
 
 interface RequestBody {
-  messages: { role: 'user' | 'assistant'; content: string }[];
-  type: BlueprintType;
+  messages:        { role: 'user' | 'assistant'; content: string }[];
+  type:            BlueprintType;
   currentArtifact?: string;
+  githubContext?:  GitHubContext;
 }
 
 function detectPhase(messages: RequestBody['messages'], currentArtifact?: string): ChatPhase {
@@ -20,7 +21,7 @@ function detectPhase(messages: RequestBody['messages'], currentArtifact?: string
 
 export async function POST(request: NextRequest) {
   const body = await request.json() as RequestBody;
-  const { messages, type, currentArtifact } = body;
+  const { messages, type, currentArtifact, githubContext } = body;
 
   if (!messages?.length) {
     return NextResponse.json({ error: 'messages array is required' }, { status: 400 });
@@ -39,17 +40,13 @@ export async function POST(request: NextRequest) {
   }
 
   const phase        = detectPhase(messages, currentArtifact);
-  const systemPrompt = buildSystemPrompt(type, phase, currentArtifact);
+  const systemPrompt = buildSystemPrompt(type, phase, currentArtifact, githubContext);
   const client       = new AzureOpenAI({ endpoint, apiKey, deployment, apiVersion });
 
   const stream = await client.chat.completions.create({
-    model: deployment,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      ...messages,
-    ],
-    stream: true,
-    // Clarifying questions are short; generation needs room for full artifacts.
+    model:      deployment,
+    messages:   [{ role: 'system', content: systemPrompt }, ...messages],
+    stream:     true,
     max_tokens: phase === 'clarify' ? 512 : 4096,
     temperature: phase === 'clarify' ? 0.5 : 0.7,
   });
@@ -66,18 +63,15 @@ export async function POST(request: NextRequest) {
         controller.close();
       }
     },
-    cancel() {
-      stream.controller.abort();
-    },
+    cancel() { stream.controller.abort(); },
   });
 
   return new Response(readable, {
     headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'no-cache',
-      'X-Accel-Buffering': 'no',
-      // Let the client know which phase was used so it can route the stream correctly.
-      'X-Blueprint-Phase': phase,
+      'Content-Type':       'text/plain; charset=utf-8',
+      'Cache-Control':      'no-cache',
+      'X-Accel-Buffering':  'no',
+      'X-Blueprint-Phase':  phase,
       'X-Blueprint-Marker': ARTIFACT_MARKER,
     },
   });

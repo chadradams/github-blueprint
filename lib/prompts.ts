@@ -1,4 +1,15 @@
-import { BlueprintType, ChatPhase, ARTIFACT_MARKER } from './types';
+import { BlueprintType, ChatPhase, GitHubContext, ARTIFACT_MARKER } from './types';
+
+function githubContextBlock(ctx?: GitHubContext): string {
+  if (!ctx) return '';
+  const lines = [
+    '--- GitHub Context ---',
+    ctx.repoText,
+    ctx.issueText ? `\n${ctx.issueText}` : '',
+    '--- End GitHub Context ---',
+  ].filter(Boolean);
+  return `\n\n${lines.join('\n')}\n\nUse the above GitHub context to make the generated artifact specific to this codebase and task — match existing naming conventions, tech stack, and UI patterns where relevant.`;
+}
 
 // ── Artifact generation rules (reused across phases) ──────────────────────────
 
@@ -139,11 +150,13 @@ export function buildSystemPrompt(
   type: BlueprintType,
   phase: ChatPhase,
   currentArtifact?: string,
+  githubContext?: GitHubContext,
 ): string {
+  const ctx = githubContextBlock(githubContext);
   switch (phase) {
-    case 'clarify':  return clarifyPrompt(type);
-    case 'generate': return generatePrompt(type);
-    case 'refine':   return refinePrompt(type, currentArtifact ?? '');
+    case 'clarify':  return clarifyPrompt(type) + ctx;
+    case 'generate': return generatePrompt(type) + ctx;
+    case 'refine':   return refinePrompt(type, currentArtifact ?? '') + ctx;
   }
 }
 

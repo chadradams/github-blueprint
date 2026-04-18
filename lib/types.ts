@@ -2,6 +2,50 @@ export type BlueprintType = 'wireframe' | 'system-diagram' | 'visual-design' | '
 
 export type ChatPhase = 'clarify' | 'generate' | 'refine';
 
+// ── GitHub integration ────────────────────────────────────────────────────────
+
+export interface GitHubSession {
+  token: string;
+  login: string;
+  avatarUrl: string;
+}
+
+export interface GitHubRepo {
+  fullName: string;   // "owner/repo"
+  name: string;
+  description: string | null;
+  defaultBranch: string;
+  language: string | null;
+  private: boolean;
+}
+
+export interface GitHubContext {
+  repoFullName: string;
+  branch: string;
+  issueNumber?: number;
+  issueType?: 'issue' | 'pr';
+  // Pre-formatted text blocks injected into AI prompts
+  repoText: string;
+  issueText?: string;
+}
+
+// ── Stored blueprint (Cosmos DB) ──────────────────────────────────────────────
+
+export interface StoredBlueprint {
+  id: string;
+  type: BlueprintType;
+  title: string;
+  messages: ChatMessage[];
+  output: string;
+  repoFullName?: string;
+  branch?: string;
+  issueNumber?: number;
+  issueType?: 'issue' | 'pr';
+  createdBy: string;   // GitHub login
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';

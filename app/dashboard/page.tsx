@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { Plus, Layout, GitFork, Palette, Code2, Search, Clock, ChevronRight } from 'lucide-react';
-import { BlueprintType, BLUEPRINT_TYPES } from '@/lib/types';
+import { useState, useEffect } from 'react';
+import { Plus, Layout, GitFork, Palette, Code2, Search, Clock, ChevronRight, GitBranch, Hash } from 'lucide-react';
+import { BlueprintType, BLUEPRINT_TYPES, StoredBlueprint } from '@/lib/types';
 
 const TYPE_ICONS: Record<BlueprintType, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   'wireframe':       Layout,
@@ -19,22 +19,36 @@ const TYPE_COLORS: Record<BlueprintType, string> = {
   'code-blueprint':  '#d29922',
 };
 
-const EXAMPLE_BLUEPRINTS = [
-  { id: '1', type: 'visual-design'   as BlueprintType, title: 'Copilot Chat Panel', prompt: 'A Copilot chat sidebar embedded in the GitHub code editor', updatedAt: '2 hours ago',  lines: 147 },
-  { id: '2', type: 'system-diagram'  as BlueprintType, title: 'CI/CD Pipeline',      prompt: 'GitHub Actions to Kubernetes deployment with build, test, security scan stages', updatedAt: '1 day ago',   lines: 42  },
-  { id: '3', type: 'wireframe'       as BlueprintType, title: 'Repo Settings Page',  prompt: 'Repository settings with general, branches, webhooks, and access sections', updatedAt: '3 days ago',  lines: 88  },
-  { id: '4', type: 'code-blueprint'  as BlueprintType, title: 'SaaS API Skeleton',   prompt: 'Next.js SaaS app with auth, Stripe billing, REST API, and dashboard', updatedAt: '1 week ago',  lines: 312 },
-  { id: '5', type: 'system-diagram'  as BlueprintType, title: 'Microservices ERD',   prompt: 'E-commerce platform database schema with users, orders, products, and payments', updatedAt: '1 week ago',  lines: 56  },
-  { id: '6', type: 'wireframe'       as BlueprintType, title: 'PR Review UI',        prompt: 'Pull request review interface with file diff, comments, and approval workflow', updatedAt: '2 weeks ago', lines: 124 },
-];
+function relativeTime(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60)   return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)    return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30)   return `${days}d ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
 
 export default function DashboardPage() {
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<BlueprintType | 'all'>('all');
+  const [search, setSearch]         = useState('');
+  const [filter, setFilter]         = useState<BlueprintType | 'all'>('all');
+  const [blueprints, setBlueprints] = useState<StoredBlueprint[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [authed, setAuthed]         = useState(false);
 
-  const filtered = EXAMPLE_BLUEPRINTS.filter((b) => {
-    const matchesSearch = b.title.toLowerCase().includes(search.toLowerCase()) ||
-      b.prompt.toLowerCase().includes(search.toLowerCase());
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/github/me').then((r) => r.json()),
+      fetch('/api/blueprints').then((r) => r.ok ? r.json() : []),
+    ]).then(([me, bps]) => {
+      setAuthed(!!me.authenticated);
+      setBlueprints(Array.isArray(bps) ? bps : []);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const filtered = blueprints.filter((b) => {
+    const matchesSearch = b.title.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = filter === 'all' || b.type === filter;
     return matchesSearch && matchesFilter;
   });
@@ -87,13 +101,26 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-6">
+        {/* Unauthenticated prompt */}
+        {!loading && !authed && (
+          <div style={{ backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '10px', padding: '20px 24px', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+            <div>
+              <p style={{ color: '#e6edf3', fontWeight: '600', marginBottom: '4px' }}>Connect GitHub to save blueprints</p>
+              <p style={{ color: '#8b949e', fontSize: '13px' }}>Link your account to persist blueprints, access repo context, and link issues.</p>
+            </div>
+            <a href="/api/github/auth" style={{ background: 'linear-gradient(135deg, #8957e5, #1f6feb)', borderRadius: '6px', padding: '7px 16px', color: 'white', fontSize: '13px', fontWeight: '500', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              Connect GitHub
+            </a>
+          </div>
+        )}
+
         {/* Stats row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Total blueprints', value: '6',  color: '#58a6ff' },
-            { label: 'Wireframes',       value: '2',  color: '#58a6ff' },
-            { label: 'System diagrams',  value: '2',  color: '#a371f7' },
-            { label: 'Visual designs',   value: '1',  color: '#3fb950' },
+            { label: 'Total blueprints', value: String(blueprints.length),                                           color: '#58a6ff' },
+            { label: 'Wireframes',       value: String(blueprints.filter((b) => b.type === 'wireframe').length),     color: '#58a6ff' },
+            { label: 'System diagrams',  value: String(blueprints.filter((b) => b.type === 'system-diagram').length),color: '#a371f7' },
+            { label: 'Visual designs',   value: String(blueprints.filter((b) => b.type === 'visual-design').length), color: '#3fb950' },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -190,65 +217,52 @@ export default function DashboardPage() {
             </Link>
 
             {filtered.map((bp) => {
-              const Icon = TYPE_ICONS[bp.type];
-              const color = TYPE_COLORS[bp.type];
+              const Icon       = TYPE_ICONS[bp.type];
+              const color      = TYPE_COLORS[bp.type];
               const typeConfig = BLUEPRINT_TYPES.find((t) => t.id === bp.type)!;
+              const lines      = bp.output ? bp.output.split('\n').length : 0;
               return (
                 <Link
                   key={bp.id}
                   href={`/editor?id=${bp.id}`}
-                  style={{
-                    backgroundColor: '#161b22',
-                    border: '1px solid #30363d',
-                    borderRadius: '10px',
-                    padding: '20px',
-                    display: 'block',
-                    textDecoration: 'none',
-                    transition: 'border-color 0.15s, box-shadow 0.15s',
-                  }}
+                  style={{ backgroundColor: '#161b22', border: '1px solid #30363d', borderRadius: '10px', padding: '20px', display: 'block', textDecoration: 'none', transition: 'border-color 0.15s, box-shadow 0.15s' }}
                   className="hover:border-[#58a6ff] hover:shadow-lg group"
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <div
-                      style={{ backgroundColor: `${color}18`, borderRadius: '8px', padding: '8px' }}
-                    >
+                    <div style={{ backgroundColor: `${color}18`, borderRadius: '8px', padding: '8px' }}>
                       <Icon style={{ color }} className="w-4 h-4" />
                     </div>
-                    <span
-                      style={{
-                        backgroundColor: `${color}18`,
-                        color,
-                        borderRadius: '20px',
-                        fontSize: '10px',
-                        fontWeight: '600',
-                        padding: '2px 8px',
-                        fontFamily: 'monospace',
-                        textTransform: 'uppercase',
-                      }}
-                    >
+                    <span style={{ backgroundColor: `${color}18`, color, borderRadius: '20px', fontSize: '10px', fontWeight: '600', padding: '2px 8px', fontFamily: 'monospace', textTransform: 'uppercase' }}>
                       {typeConfig.outputLanguage}
                     </span>
                   </div>
 
-                  <h3
-                    style={{ color: '#e6edf3', fontSize: '15px', fontWeight: '600', marginBottom: '6px', lineHeight: '1.3' }}
-                    className="group-hover:text-[#58a6ff] transition-colors"
-                  >
+                  <h3 style={{ color: '#e6edf3', fontSize: '15px', fontWeight: '600', marginBottom: '6px', lineHeight: '1.3' }} className="group-hover:text-[#58a6ff] transition-colors">
                     {bp.title}
                   </h3>
 
-                  <p style={{ color: '#8b949e', fontSize: '12px', lineHeight: '1.5', marginBottom: '16px' }}
-                    className="line-clamp-2"
-                  >
-                    {bp.prompt}
-                  </p>
+                  {/* GitHub context chips */}
+                  {(bp.repoFullName || bp.issueNumber) && (
+                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                      {bp.repoFullName && !bp.repoFullName.startsWith('user:') && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', backgroundColor: '#58a6ff15', border: '1px solid #58a6ff30', borderRadius: '20px', padding: '1px 7px', color: '#58a6ff', fontSize: '10px' }}>
+                          <GitBranch className="w-2.5 h-2.5" />{bp.repoFullName}
+                        </span>
+                      )}
+                      {bp.issueNumber && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', backgroundColor: '#d2992215', border: '1px solid #d2992230', borderRadius: '20px', padding: '1px 7px', color: '#d29922', fontSize: '10px' }}>
+                          <Hash className="w-2.5 h-2.5" />{bp.issueType === 'pr' ? 'PR' : 'Issue'} #{bp.issueNumber}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between text-xs text-[#6e7681]">
                     <div className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      <span>Updated {bp.updatedAt}</span>
+                      <span>Updated {relativeTime(bp.updatedAt)}</span>
                     </div>
-                    <span>{bp.lines} lines</span>
+                    <span>{lines} lines</span>
                   </div>
                 </Link>
               );

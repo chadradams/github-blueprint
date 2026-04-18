@@ -23,6 +23,16 @@ output "openai_deployment_name" {
   value       = azurerm_cognitive_deployment.gpt4o.name
 }
 
+output "cosmos_endpoint" {
+  description = "Cosmos DB endpoint — matches COSMOS_ENDPOINT in .env.local."
+  value       = azurerm_cosmosdb_account.this.endpoint
+}
+
+output "key_vault_uri" {
+  description = "Key Vault URI — for reference and manual secret management."
+  value       = azurerm_key_vault.this.vault_uri
+}
+
 output "app_insights_connection_string" {
   description = "Application Insights connection string for local development."
   value       = azurerm_application_insights.this.connection_string
@@ -37,5 +47,12 @@ output "env_local_snippet" {
     AZURE_OPENAI_KEY=${azurerm_cognitive_account.openai.primary_access_key}
     AZURE_OPENAI_DEPLOYMENT=${azurerm_cognitive_deployment.gpt4o.name}
     AZURE_OPENAI_API_VERSION=2024-02-01
+
+    COSMOS_ENDPOINT=${azurerm_cosmosdb_account.this.endpoint}
+    COSMOS_KEY=${azurerm_cosmosdb_account.this.primary_key}
+
+    GITHUB_CLIENT_ID=${var.github_client_id}
+    GITHUB_CLIENT_SECRET=<from Key Vault or terraform.tfvars>
+    JWT_SECRET=<from Key Vault or terraform.tfvars>
   EOT
 }
