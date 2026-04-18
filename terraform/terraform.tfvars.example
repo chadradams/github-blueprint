@@ -1,0 +1,28 @@
+# Copy this file to terraform.tfvars and adjust values for your deployment.
+# terraform.tfvars is gitignored — never commit it with real credentials.
+
+project_name = "copilot-blueprint"
+environment  = "dev"
+
+# Region for App Service and observability resources
+location = "eastus"
+
+# Region for Azure OpenAI — must support GPT-4o
+# Check availability: https://learn.microsoft.com/azure/ai-services/openai/concepts/models
+openai_location = "eastus"
+
+# GPT-4o deployment settings
+openai_deployment_name = "gpt-4o"
+openai_model_version   = "2024-05-13"
+
+# Tokens-per-minute capacity (10 = 10K TPM)
+# Increase for production workloads
+openai_capacity = 10
+
+# App Service plan SKU
+# B1  = dev/test  (~$13/mo)
+# P1v3 = production (~$85/mo)
+app_service_sku = "B1"
+
+# Log Analytics retention
+log_retention_days = 30

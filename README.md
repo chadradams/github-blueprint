@@ -70,6 +70,60 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Infrastructure (Terraform)
+
+The `terraform/` directory provisions all required Azure resources — Azure OpenAI, App Service, and Application Insights — in one apply.
+
+### Prerequisites
+
+- [Terraform](https://developer.hashicorp.com/terraform/install) >= 1.5
+- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) and an active subscription
+
+### Deploy
+
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your project name and preferred regions
+
+az login
+terraform init
+terraform plan -out=blueprint.tfplan
+terraform apply blueprint.tfplan
+```
+
+After apply, grab your `.env.local` values in one command:
+
+```bash
+terraform output -raw env_local_snippet
+```
+
+### Deployed resources
+
+| Resource | Purpose |
+|---|---|
+| `azurerm_resource_group` | Container for all resources |
+| `azurerm_cognitive_account` (OpenAI) | Azure AI Foundry endpoint |
+| `azurerm_cognitive_deployment` (gpt-4o) | Model deployment |
+| `azurerm_service_plan` | Linux App Service Plan |
+| `azurerm_linux_web_app` | Next.js host with env vars pre-wired |
+| `azurerm_log_analytics_workspace` | Log sink |
+| `azurerm_application_insights` | Performance + error monitoring |
+
+### Deploy the app after `terraform apply`
+
+```bash
+# From repo root — build and zip-deploy to the provisioned App Service
+npm run build
+zip -r app.zip .next package.json package-lock.json public next.config.mjs
+
+az webapp deploy \
+  --resource-group $(cd terraform && terraform output -raw resource_group_name) \
+  --name $(cd terraform && terraform output -raw web_app_name) \
+  --src-path app.zip \
+  --type zip
+```
+
 ## Project structure
 
 ```
