@@ -2,7 +2,7 @@
 
 > AI-powered UI wireframes, system diagrams, visual designs, and code blueprints — built into GitHub.
 
-Copilot Blueprint is a GitHub-themed design tool that generates production-ready design artifacts from a natural language prompt. It connects to **Azure AI Foundry** as its AI backend and renders output in a Monaco code editor with a live preview panel.
+Copilot Blueprint is a GitHub-themed design tool that generates production-ready design artifacts from natural language. It connects to **Azure AI Foundry** as its AI backend, renders output in a Monaco code editor with live preview, and integrates directly with GitHub for repo/issue context, OAuth authentication, and blueprint persistence.
 
 ![Blueprint type selector showing Wireframe, System Diagram, Visual Design, and Code Blueprint options](https://via.placeholder.com/900x480/0d1117/a371f7?text=Copilot+Blueprint)
 
@@ -12,9 +12,13 @@ Copilot Blueprint is a GitHub-themed design tool that generates production-ready
 - **System Diagrams** — Mermaid-based architecture diagrams, ERDs, sequence diagrams, and flowcharts
 - **Visual Designs** — High-fidelity mockups using GitHub's Primer dark theme
 - **Code Blueprints** — TypeScript file trees, interfaces, and module skeletons
-- **Streaming generation** — Output streams token-by-token via Azure AI Foundry
+- **Conversational generation** — Three-phase AI flow: clarify → generate → refine
+- **Streaming output** — Tokens stream live via Azure AI Foundry into the Monaco editor
 - **Live preview** — HTML outputs render in a sandboxed iframe; Mermaid diagrams render inline
-- **Monaco editor** — Custom GitHub Dark theme with copy and download actions
+- **GitHub OAuth** — Connect your GitHub account directly in the app
+- **Repo context** — Load any repo's file tree + README + tech stack into the AI prompt
+- **Issue & PR linking** — Reference an issue or PR to ground designs in real requirements
+- **Blueprint persistence** — Save, browse, search, and filter blueprints via Cosmos DB
 - **GitHub-native UI** — Primer color system, dark theme, breadcrumb navigation
 
 ## Tech stack
@@ -26,7 +30,10 @@ Copilot Blueprint is a GitHub-themed design tool that generates production-ready
 | Styling | Tailwind CSS + GitHub Primer tokens |
 | Editor | Monaco Editor (`@monaco-editor/react`) |
 | Diagrams | Mermaid.js |
-| AI backend | Azure AI Foundry (Azure OpenAI) |
+| AI backend | Azure AI Foundry (Azure OpenAI — GPT-4o) |
+| Auth | GitHub OAuth 2.0 + JWT (`jose`) |
+| Database | Azure Cosmos DB (NoSQL) |
+| Secrets | Azure Key Vault (Key Vault References) |
 | Infrastructure | Terraform (azurerm ~> 3.100) |
 | Observability | Azure Application Insights + Log Analytics |
 
@@ -38,6 +45,7 @@ Copilot Blueprint is a GitHub-themed design tool that generates production-ready
 
 - Node.js >= 20 LTS
 - An Azure subscription with access to Azure OpenAI (GPT-4o)
+- A GitHub OAuth App (for auth + GitHub integration features)
 
 ### 1. Clone and install
 
@@ -47,31 +55,44 @@ cd github-blueprint
 npm install
 ```
 
-### 2. Configure environment variables
+### 2. Create a GitHub OAuth App
+
+1. Go to [github.com/settings/developers](https://github.com/settings/developers) → **New OAuth App**
+2. Set **Authorization callback URL** to `http://localhost:3000/api/github/callback` for local dev
+3. Copy the **Client ID** and generate a **Client Secret**
+
+For production, add a second callback URL pointing to your App Service hostname.
+
+### 3. Configure environment variables
 
 ```bash
 cp .env.example .env.local
 ```
 
-Open `.env.local` and fill in your Azure AI Foundry credentials:
+Fill in `.env.local`:
 
 ```env
+# Azure OpenAI
 AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
 AZURE_OPENAI_KEY=your-api-key-here
 AZURE_OPENAI_DEPLOYMENT=gpt-4o
 AZURE_OPENAI_API_VERSION=2024-02-01
 
-# Optional — enables Application Insights in local dev (see Observability section)
-APPLICATIONINSIGHTS_CONNECTION_STRING=
+# Cosmos DB (blueprint persistence — optional locally, required in production)
+COSMOS_ENDPOINT=https://your-cosmos.documents.azure.com:443/
+COSMOS_KEY=your-cosmos-primary-key
+
+# GitHub OAuth
+GITHUB_CLIENT_ID=your-github-oauth-app-client-id
+GITHUB_CLIENT_SECRET=your-github-oauth-app-client-secret
+
+# JWT session signing (min 32 chars) — generate with: openssl rand -hex 32
+JWT_SECRET=your-32-char-minimum-random-secret
 ```
 
-> **Where to find these values:**
-> - Endpoint and Key: Azure Portal → your OpenAI resource → *Keys and Endpoint*
-> - Deployment name: [Azure AI Foundry](https://ai.azure.com) → *Deployments*
->
-> Or run `terraform output -raw env_local_snippet` after a Terraform apply to get all values pre-filled.
+> **Tip:** After a `terraform apply`, run `terraform output -raw env_local_snippet` to get a pre-filled block for all Azure values.
 
-### 3. Start the dev server
+### 4. Start the dev server
 
 ```bash
 npm run dev
@@ -88,38 +109,82 @@ Open [http://localhost:3000](http://localhost:3000). The app hot-reloads on file
 | `npm run start` | Serve the production build locally |
 | `npm run lint` | Run ESLint across all source files |
 
-### How the streaming API route works
+### How the AI generation works
 
-`POST /api/generate` accepts `{ prompt, type }` and proxies a streaming request to Azure OpenAI. The response is a `ReadableStream` of plain text chunks — the client reads them with a `fetch` + `ReadableStreamDefaultReader` loop and appends each chunk to the Monaco editor in real time.
+`POST /api/generate` accepts `{ messages, type, currentArtifact?, githubContext? }` and proxies a streaming request to Azure OpenAI. The response phase is determined server-side:
+
+| Phase | Condition | AI behaviour |
+|---|---|---|
+| **clarify** | First user message, no artifact | Asks 2–3 questions to refine the request |
+| **generate** | Second+ message, no artifact | Outputs `__BLUEPRINT_ARTIFACT__` prefix + full artifact |
+| **refine** | Any message with existing artifact | Patches the artifact, re-emits with prefix |
+
+The `__BLUEPRINT_ARTIFACT__` sentinel is stripped client-side and routes the stream to the Monaco editor rather than the chat thread.
 
 ```
-Browser → POST /api/generate → AzureOpenAI.chat.completions.create(stream:true)
+Browser → POST /api/generate → AzureOpenAI streaming
                                       ↓ chunks
-                             ReadableStream → Response → fetch reader → setOutput()
+                             ReadableStream → fetch reader
+                                      ↓
+                    starts with ARTIFACT_MARKER? → setOutput()  (Monaco)
+                                               no → updateMessage()  (chat)
 ```
 
-If the connection is interrupted mid-stream, the server-side `AbortController` is signalled via the `cancel()` callback on the `ReadableStream`, which stops token generation on the Azure side.
+### GitHub context injection
+
+When a repo or issue is loaded via `GitHubContextBar`, the context is sent with every generate request and appended to all three phase system prompts:
+
+```
+--- GitHub Context ---
+Repository: owner/repo  (TypeScript · private)
+Branch: main
+Files (47): src/components/Button.tsx, src/lib/api.ts, …
+README: …first 800 chars…
+Tech stack (package.json): react, next, tailwind…
+Issue #42: "Redesign the settings page"
+  Body: …
+  Comments: …
+--- End GitHub Context ---
+```
+
+The AI uses this to match naming conventions, tech stack, and code style.
 
 ### Project structure
 
 ```
 github-blueprint/
 ├── app/
-│   ├── layout.tsx               # Root layout with GitHub nav
-│   ├── page.tsx                 # Feature landing page
-│   ├── dashboard/page.tsx       # Blueprint gallery with search + filter
-│   ├── editor/page.tsx          # Split-panel editor (prompt + artifact)
-│   └── api/generate/route.ts   # Streaming Azure OpenAI proxy
+│   ├── layout.tsx                       # Root layout with GitHubNav
+│   ├── page.tsx                         # Feature landing page
+│   ├── dashboard/page.tsx               # Blueprint gallery (search, filter, stats)
+│   ├── editor/page.tsx                  # Split-panel editor
+│   └── api/
+│       ├── generate/route.ts            # Streaming Azure OpenAI proxy
+│       ├── blueprints/
+│       │   ├── route.ts                 # GET list / POST create
+│       │   └── [id]/route.ts            # GET / PATCH / DELETE (ownership-checked)
+│       └── github/
+│           ├── auth/route.ts            # Start OAuth flow
+│           ├── callback/route.ts        # Handle OAuth callback, set session cookie
+│           ├── me/route.ts              # Return current session
+│           ├── repos/route.ts           # List authenticated user's repos
+│           ├── repo-context/route.ts    # Build repo context text for AI
+│           └── issue/route.ts           # Fetch issue or PR context text
 ├── components/
-│   ├── GitHubNav.tsx            # GitHub-style top navigation bar
+│   ├── GitHubNav.tsx                    # Top nav — shows avatar or Connect GitHub CTA
 │   └── editor/
-│       ├── TypeSelector.tsx     # Blueprint type picker (4 types)
-│       ├── PromptPanel.tsx      # Left panel: prompt, examples, generate button
-│       └── ArtifactPanel.tsx    # Right panel: Monaco editor + preview tabs
+│       ├── ChatPanel.tsx                # Chat thread with type badge + streaming
+│       ├── ArtifactPanel.tsx            # Monaco editor + preview tabs
+│       └── GitHubContextBar.tsx         # Repo/branch/issue picker
 ├── lib/
-│   ├── types.ts                 # BlueprintType union + BLUEPRINT_TYPES config
-│   └── prompts.ts               # System prompts for each blueprint type
-└── terraform/                   # Azure infrastructure (see Infrastructure section)
+│   ├── types.ts                         # All shared types + constants
+│   ├── prompts.ts                       # System prompts for clarify/generate/refine
+│   ├── auth.ts                          # JWT session helpers (jose)
+│   ├── cosmos.ts                        # Cosmos DB CRUD (graceful no-op when unconfigured)
+│   └── github.ts                        # GitHub API helpers (repos, tree, context builder)
+├── scripts/
+│   └── deploy.sh                        # End-to-end Azure deploy script
+└── terraform/                           # Azure infrastructure (see Infrastructure section)
 ```
 
 ### Environment variables
@@ -130,7 +195,14 @@ github-blueprint/
 | `AZURE_OPENAI_KEY` | Yes | Azure OpenAI API key |
 | `AZURE_OPENAI_DEPLOYMENT` | Yes | Model deployment name (e.g. `gpt-4o`) |
 | `AZURE_OPENAI_API_VERSION` | No | API version — default `2024-02-01` |
-| `APPLICATIONINSIGHTS_CONNECTION_STRING` | No | Enables local telemetry (see Observability) |
+| `COSMOS_ENDPOINT` | No* | Cosmos DB account URL — blueprints disabled without it |
+| `COSMOS_KEY` | No* | Cosmos DB primary key |
+| `GITHUB_CLIENT_ID` | No* | GitHub OAuth App client ID — GitHub features disabled without it |
+| `GITHUB_CLIENT_SECRET` | No* | GitHub OAuth App client secret |
+| `JWT_SECRET` | No* | Min 32-char secret for signing session cookies |
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | No | Enables local telemetry |
+
+*Required for full functionality; the app degrades gracefully without them.
 
 ---
 
@@ -141,25 +213,64 @@ The `terraform/` directory provisions all required Azure resources in a single `
 ### Prerequisites
 
 - [Terraform](https://developer.hashicorp.com/terraform/install) >= 1.5
-- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) logged in to your subscription
+- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) >= 2.50
 
-### Deploy infrastructure
+### Quick deploy (automated script)
+
+```bash
+./scripts/deploy.sh --tenant <your-tenant-id> --subscription <your-subscription-id>
+```
+
+The script handles login, `terraform init/plan/apply`, Next.js build, and `az webapp deploy` in one shot. Use `--env prod` for production.
+
+**Flags:**
+
+| Flag | Description |
+|---|---|
+| `--tenant ID` | Azure tenant ID (or set `ARM_TENANT_ID`) |
+| `--subscription ID` | Azure subscription ID (or set `ARM_SUBSCRIPTION_ID`) |
+| `--env dev\|staging\|prod` | Deployment environment tag (default: `dev`) |
+| `--skip-infra` | Skip Terraform — only build and deploy the app |
+| `--skip-app` | Skip build/deploy — only run Terraform |
+
+**Non-interactive / CI (service principal):**
+
+```bash
+export ARM_TENANT_ID=<tenant>
+export ARM_SUBSCRIPTION_ID=<subscription>
+export ARM_CLIENT_ID=<sp-app-id>
+export ARM_CLIENT_SECRET=<sp-secret>
+
+./scripts/deploy.sh --env prod
+```
+
+### Manual deploy
 
 ```bash
 cd terraform
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars — set project_name, location, openai_location, sku
+# Fill in terraform.tfvars (see Terraform variables below)
 
-az login
+az login --tenant <your-tenant-id>
 terraform init
 terraform plan -out=blueprint.tfplan
 terraform apply blueprint.tfplan
+
+# Get .env.local values
+terraform output -raw env_local_snippet
 ```
 
-After apply, print a ready-to-paste `.env.local` block:
+Then build and ship the app:
 
 ```bash
-terraform output -raw env_local_snippet
+npm ci && npm run build
+zip -r app.zip .next public package.json package-lock.json next.config.mjs
+
+az webapp deploy \
+  --resource-group $(cd terraform && terraform output -raw resource_group_name) \
+  --name        $(cd terraform && terraform output -raw web_app_name) \
+  --src-path    app.zip \
+  --type        zip
 ```
 
 ### Deployed resources
@@ -168,13 +279,15 @@ terraform output -raw env_local_snippet
 |---|---|---|
 | `azurerm_resource_group` | `<project>-<env>-rg` | Container for all resources |
 | `azurerm_cognitive_account` | `<project>-oai-<suffix>` | Azure OpenAI / AI Foundry endpoint |
-| `azurerm_cognitive_deployment` | `gpt-4o` | GPT-4o model deployment (Standard SKU) |
+| `azurerm_cognitive_deployment` | `gpt-4o` | GPT-4o model deployment |
+| `azurerm_cosmosdb_account` | `<project>-cosmos-<suffix>` | Blueprint persistence (NoSQL) |
+| `azurerm_key_vault` | `<project>-kv-<suffix>` | GitHub OAuth secret + JWT secret storage |
 | `azurerm_service_plan` | `<project>-plan-<suffix>` | Linux App Service Plan |
-| `azurerm_linux_web_app` | `<project>-app-<suffix>` | Next.js host — env vars pre-wired from OpenAI outputs |
+| `azurerm_linux_web_app` | `<project>-app-<suffix>` | Next.js host with managed identity |
 | `azurerm_log_analytics_workspace` | `<project>-logs-<suffix>` | Centralised log sink |
 | `azurerm_application_insights` | `<project>-insights-<suffix>` | Performance + error monitoring |
 
-All resource names include a random 6-character suffix to ensure global uniqueness.
+All names include a random 6-character suffix for global uniqueness.
 
 ### Terraform variables
 
@@ -189,19 +302,22 @@ All resource names include a random 6-character suffix to ensure global uniquene
 | `openai_capacity` | `10` | Tokens-per-minute capacity (in thousands) |
 | `app_service_sku` | `B1` | App Service SKU — use `P1v3`+ for production |
 | `log_retention_days` | `30` | Log Analytics retention period |
+| `github_client_id` | `""` | GitHub OAuth App client ID |
+| `github_client_secret` | `""` | GitHub OAuth App client secret (stored in Key Vault) |
+| `jwt_secret` | `""` | Session signing secret — min 32 chars (`openssl rand -hex 32`) |
 
-### Deploy the app after `terraform apply`
+### Secrets management
 
-```bash
-# Build and zip-deploy from repo root
-npm run build
-zip -r app.zip .next package.json package-lock.json next.config.mjs
+`github_client_secret` and `jwt_secret` are stored in Azure Key Vault at deploy time and injected into App Service via [Key Vault References](https://learn.microsoft.com/azure/app-service/app-service-key-vault-references) — they are never written to App Service config in plaintext.
 
-az webapp deploy \
-  --resource-group $(cd terraform && terraform output -raw resource_group_name) \
-  --name        $(cd terraform && terraform output -raw web_app_name) \
-  --src-path    app.zip \
-  --type        zip
+The App Service has a **System-Assigned Managed Identity** with `Get` and `List` access to the vault — no credentials are required at runtime.
+
+### After deploy — configure OAuth callback
+
+Once deployed, update your GitHub OAuth App's callback URL:
+
+```
+https://<your-app>.azurewebsites.net/api/github/callback
 ```
 
 ### Tear down
@@ -215,50 +331,31 @@ terraform destroy
 
 ## Observability
 
-Copilot Blueprint ships with Azure Application Insights wired in via Terraform. Here's how to use it in each environment.
-
 ### In production (App Service)
 
-The `APPLICATIONINSIGHTS_CONNECTION_STRING` and `ApplicationInsightsAgent_EXTENSION_VERSION=~3` app settings are set automatically by Terraform. The App Service Node.js agent auto-instruments:
-
-- HTTP request traces (including the `/api/generate` streaming route)
-- Dependency calls (outbound Azure OpenAI requests, with duration + status)
-- Unhandled exceptions and server-side errors
-- Custom events and metrics you emit with the SDK
-
-No code changes are required — the agent attaches at startup.
+`APPLICATIONINSIGHTS_CONNECTION_STRING` and `ApplicationInsightsAgent_EXTENSION_VERSION=~3` are set automatically by Terraform. The Node.js agent auto-instruments HTTP requests, Azure OpenAI dependency calls, and unhandled exceptions — no code changes required.
 
 ### In local development
-
-Add the connection string to `.env.local` to send telemetry from your local machine to the same Application Insights resource:
-
-```env
-APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=...;IngestionEndpoint=...
-```
-
-Get the value from Terraform:
 
 ```bash
 cd terraform && terraform output -raw app_insights_connection_string
 ```
 
-Or from the Azure Portal: **Application Insights** → your resource → *Overview* → *Connection String*.
+Paste the result into `.env.local` as `APPLICATIONINSIGHTS_CONNECTION_STRING`.
 
 ### Viewing telemetry
 
-| What to look at | Where in Azure Portal |
+| What | Where in Azure Portal |
 |---|---|
 | Live request traces | Application Insights → *Transaction search* |
-| Request failures + exceptions | Application Insights → *Failures* |
-| Latency percentiles (p50/p95/p99) | Application Insights → *Performance* |
-| Azure OpenAI dependency durations | Application Insights → *Performance* → *Dependencies* |
+| Failures + exceptions | Application Insights → *Failures* |
+| Latency percentiles | Application Insights → *Performance* |
+| OpenAI dependency durations | Application Insights → *Performance* → *Dependencies* |
 | Custom log queries | Log Analytics → *Logs* (KQL) |
 
 ### Useful KQL queries
 
-Open **Log Analytics → Logs** and run against your workspace.
-
-**All failed generate requests in the last 24 hours:**
+**Failed generate requests (last 24 h):**
 ```kusto
 requests
 | where timestamp > ago(24h)
@@ -281,21 +378,13 @@ requests
 | order by timestamp desc
 ```
 
-**Azure OpenAI dependency call durations:**
+**Azure OpenAI dependency durations:**
 ```kusto
 dependencies
 | where timestamp > ago(24h)
 | where type == "HTTP"
 | where target contains "openai.azure.com"
 | summarize avg(duration), max(duration), count() by bin(timestamp, 5m)
-| order by timestamp desc
-```
-
-**Unhandled exceptions:**
-```kusto
-exceptions
-| where timestamp > ago(24h)
-| project timestamp, type, outerMessage, cloud_RoleInstance
 | order by timestamp desc
 ```
 
