@@ -40,7 +40,7 @@ output "app_insights_connection_string" {
 }
 
 output "env_local_snippet" {
-  description = "Ready-to-paste .env.local block for local development. Production uses Key Vault references instead of these raw values."
+  description = "Ready-to-paste .env.local block for local dev. AZURE_OPENAI_KEY and COSMOS_KEY are only needed locally — production uses managed identity."
   sensitive   = true
   value       = <<-EOT
     AZURE_OPENAI_ENDPOINT=${azurerm_cognitive_account.openai.endpoint}

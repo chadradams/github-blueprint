@@ -129,20 +129,26 @@ resource "azurerm_key_vault_access_policy" "app" {
   depends_on = [azurerm_linux_web_app.this]
 }
 
-resource "azurerm_key_vault_secret" "openai_key" {
-  name         = "openai-key"
-  value        = azurerm_cognitive_account.openai.primary_access_key
-  key_vault_id = azurerm_key_vault.this.id
+# ── Managed identity role assignments ────────────────────────────────────────
 
-  depends_on = [azurerm_key_vault_access_policy.deployer]
+# Azure OpenAI — allows the app to call the API without a key
+resource "azurerm_role_assignment" "app_openai" {
+  scope                = azurerm_cognitive_account.openai.id
+  role_definition_name = "Cognitive Services OpenAI User"
+  principal_id         = azurerm_linux_web_app.this.identity[0].principal_id
+
+  depends_on = [azurerm_linux_web_app.this]
 }
 
-resource "azurerm_key_vault_secret" "cosmos_key" {
-  name         = "cosmos-key"
-  value        = azurerm_cosmosdb_account.this.primary_key
-  key_vault_id = azurerm_key_vault.this.id
+# Cosmos DB — built-in data contributor (read/write, no key required)
+resource "azurerm_cosmosdb_sql_role_assignment" "app_cosmos" {
+  resource_group_name = azurerm_resource_group.this.name
+  account_name        = azurerm_cosmosdb_account.this.name
+  role_definition_id  = "${azurerm_cosmosdb_account.this.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
+  principal_id        = azurerm_linux_web_app.this.identity[0].principal_id
+  scope               = azurerm_cosmosdb_account.this.id
 
-  depends_on = [azurerm_key_vault_access_policy.deployer]
+  depends_on = [azurerm_linux_web_app.this]
 }
 
 resource "azurerm_key_vault_secret" "github_client_secret" {
@@ -214,15 +220,13 @@ resource "azurerm_linux_web_app" "this" {
   }
 
   app_settings = {
-    # Azure OpenAI — key resolved from Key Vault at runtime
+    # Azure OpenAI — no key; managed identity authenticates via Cognitive Services OpenAI User role
     AZURE_OPENAI_ENDPOINT    = azurerm_cognitive_account.openai.endpoint
-    AZURE_OPENAI_KEY         = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.openai_key.versionless_id})"
     AZURE_OPENAI_DEPLOYMENT  = azurerm_cognitive_deployment.gpt4o.name
     AZURE_OPENAI_API_VERSION = "2024-02-01"
 
-    # Cosmos DB — key resolved from Key Vault at runtime
+    # Cosmos DB — no key; managed identity authenticates via Cosmos DB Built-in Data Contributor role
     COSMOS_ENDPOINT = azurerm_cosmosdb_account.this.endpoint
-    COSMOS_KEY      = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.cosmos_key.versionless_id})"
 
     # GitHub OAuth — secret resolved from Key Vault at runtime
     GITHUB_CLIENT_ID     = var.github_client_id
@@ -256,8 +260,6 @@ resource "azurerm_linux_web_app" "this" {
   }
 
   depends_on = [
-    azurerm_key_vault_secret.openai_key,
-    azurerm_key_vault_secret.cosmos_key,
     azurerm_key_vault_secret.github_client_secret,
     azurerm_key_vault_secret.jwt_secret,
   ]

@@ -192,11 +192,11 @@ github-blueprint/
 | Variable | Required | Description |
 |---|---|---|
 | `AZURE_OPENAI_ENDPOINT` | Yes | Azure OpenAI resource URL |
-| `AZURE_OPENAI_KEY` | Yes | Azure OpenAI API key |
+| `AZURE_OPENAI_KEY` | Local dev only | API key — omit in production; managed identity is used instead |
 | `AZURE_OPENAI_DEPLOYMENT` | Yes | Model deployment name (e.g. `gpt-4o`) |
 | `AZURE_OPENAI_API_VERSION` | No | API version — default `2024-02-01` |
 | `COSMOS_ENDPOINT` | No* | Cosmos DB account URL — blueprints disabled without it |
-| `COSMOS_KEY` | No* | Cosmos DB primary key |
+| `COSMOS_KEY` | Local dev only | Primary key — omit in production; managed identity is used instead |
 | `GITHUB_CLIENT_ID` | No* | GitHub OAuth App client ID — GitHub features disabled without it |
 | `GITHUB_CLIENT_SECRET` | No* | GitHub OAuth App client secret |
 | `JWT_SECRET` | No* | Min 32-char secret for signing session cookies |
@@ -308,9 +308,16 @@ All names include a random 6-character suffix for global uniqueness.
 
 ### Secrets management
 
-`github_client_secret` and `jwt_secret` are stored in Azure Key Vault at deploy time and injected into App Service via [Key Vault References](https://learn.microsoft.com/azure/app-service/app-service-key-vault-references) — they are never written to App Service config in plaintext.
+The App Service has a **System-Assigned Managed Identity** — no credentials are stored in App Service config or Terraform state:
 
-The App Service has a **System-Assigned Managed Identity** with `Get` and `List` access to the vault — no credentials are required at runtime.
+| Secret | Mechanism |
+|---|---|
+| `AZURE_OPENAI_KEY` | Not used — managed identity holds `Cognitive Services OpenAI User` role |
+| `COSMOS_KEY` | Not used — managed identity holds `Cosmos DB Built-in Data Contributor` role |
+| `GITHUB_CLIENT_SECRET` | Key Vault Reference (`@Microsoft.KeyVault(...)`) |
+| `JWT_SECRET` | Key Vault Reference (`@Microsoft.KeyVault(...)`) |
+
+For **local development**, set `AZURE_OPENAI_KEY` and `COSMOS_KEY` in `.env.local`, or run `az login` with your account granted the same roles — `DefaultAzureCredential` will pick up your CLI session automatically.
 
 ### After deploy — configure OAuth callback
 

@@ -1,4 +1,5 @@
-import { CosmosClient, Database, Container } from '@azure/cosmos';
+import { CosmosClient, Container } from '@azure/cosmos';
+import { DefaultAzureCredential } from '@azure/identity';
 import { StoredBlueprint } from './types';
 
 const DB_NAME        = 'copilot-blueprint';
@@ -7,16 +8,19 @@ const CONTAINER_NAME = 'blueprints';
 let _client: CosmosClient | null = null;
 
 function isConfigured() {
-  return !!(process.env.COSMOS_ENDPOINT && process.env.COSMOS_KEY);
+  return !!process.env.COSMOS_ENDPOINT;
 }
 
 function getContainer(): Container {
   if (!isConfigured()) throw new Error('Cosmos DB not configured');
   if (!_client) {
-    _client = new CosmosClient({
-      endpoint: process.env.COSMOS_ENDPOINT!,
-      key:      process.env.COSMOS_KEY!,
-    });
+    const endpoint = process.env.COSMOS_ENDPOINT!;
+    const key      = process.env.COSMOS_KEY;
+    // Production: authenticate via managed identity (no key needed).
+    // Local dev: fall back to key from .env.local, or use `az login` via DefaultAzureCredential.
+    _client = key
+      ? new CosmosClient({ endpoint, key })
+      : new CosmosClient({ endpoint, aadCredentials: new DefaultAzureCredential() });
   }
   return _client.database(DB_NAME).container(CONTAINER_NAME);
 }
