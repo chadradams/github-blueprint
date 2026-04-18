@@ -58,10 +58,14 @@ npm install
 ### 2. Create a GitHub OAuth App
 
 1. Go to [github.com/settings/developers](https://github.com/settings/developers) → **New OAuth App**
-2. Set **Authorization callback URL** to `http://localhost:3000/api/github/callback` for local dev
-3. Copy the **Client ID** and generate a **Client Secret**
+2. Fill in the form:
+   - **Homepage URL:** `http://localhost:3000`
+   - **Authorization callback URL:** `http://localhost:3000/api/github/callback`
+3. Click **Register application**
+4. Copy the **Client ID**
+5. Click **Generate a new client secret** and copy it immediately — it won't be shown again
 
-For production, add a second callback URL pointing to your App Service hostname.
+> You'll add a second callback URL for production after deploying (`https://<app>.azurewebsites.net/api/github/callback`).
 
 ### 3. Configure environment variables
 
@@ -69,28 +73,77 @@ For production, add a second callback URL pointing to your App Service hostname.
 cp .env.example .env.local
 ```
 
-Fill in `.env.local`:
+Open `.env.local` and fill in the values. There are two paths depending on how you want to authenticate to Azure:
+
+---
+
+**Path A — API keys (quickest for local dev)**
+
+Get these from the Azure Portal or via `terraform output -raw env_local_snippet` after deploying:
 
 ```env
-# Azure OpenAI
 AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
-AZURE_OPENAI_KEY=your-api-key-here
+AZURE_OPENAI_KEY=your-openai-api-key
 AZURE_OPENAI_DEPLOYMENT=gpt-4o
 AZURE_OPENAI_API_VERSION=2024-02-01
 
-# Cosmos DB (blueprint persistence — optional locally, required in production)
 COSMOS_ENDPOINT=https://your-cosmos.documents.azure.com:443/
 COSMOS_KEY=your-cosmos-primary-key
 
-# GitHub OAuth
-GITHUB_CLIENT_ID=your-github-oauth-app-client-id
-GITHUB_CLIENT_SECRET=your-github-oauth-app-client-secret
+GITHUB_CLIENT_ID=your-github-oauth-client-id
+GITHUB_CLIENT_SECRET=your-github-oauth-client-secret
 
-# JWT session signing (min 32 chars) — generate with: openssl rand -hex 32
-JWT_SECRET=your-32-char-minimum-random-secret
+JWT_SECRET=your-32-char-minimum-secret   # openssl rand -hex 32
 ```
 
-> **Tip:** After a `terraform apply`, run `terraform output -raw env_local_snippet` to get a pre-filled block for all Azure values.
+---
+
+**Path B — Keyless via `az login` (mirrors production)**
+
+Omit `AZURE_OPENAI_KEY` and `COSMOS_KEY`. The app uses `DefaultAzureCredential`, which picks up your active `az login` session. You must grant your account the same roles the App Service managed identity holds:
+
+```bash
+# Log in and set your subscription
+az login
+az account set --subscription <your-subscription-id>
+
+# Get the resource names from Terraform outputs
+RG=$(cd terraform && terraform output -raw resource_group_name)
+OAI=$(cd terraform && terraform output -raw openai_resource_name 2>/dev/null || echo "<openai-resource-name>")
+COSMOS=$(cd terraform && terraform output -raw cosmos_account_name 2>/dev/null || echo "<cosmos-account-name>")
+MY_ID=$(az ad signed-in-user show --query id -o tsv)
+
+# Grant your account Cognitive Services OpenAI User on the OpenAI resource
+az role assignment create \
+  --role "Cognitive Services OpenAI User" \
+  --assignee "$MY_ID" \
+  --scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RG/providers/Microsoft.CognitiveServices/accounts/$OAI"
+
+# Grant your account Cosmos DB Built-in Data Contributor on the Cosmos account
+az cosmosdb sql role assignment create \
+  --resource-group "$RG" \
+  --account-name   "$COSMOS" \
+  --role-definition-id "00000000-0000-0000-0000-000000000002" \
+  --principal-id   "$MY_ID" \
+  --scope          "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RG/providers/Microsoft.DocumentDB/databaseAccounts/$COSMOS"
+```
+
+Then set only the non-key values in `.env.local`:
+
+```env
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
+AZURE_OPENAI_DEPLOYMENT=gpt-4o
+AZURE_OPENAI_API_VERSION=2024-02-01
+
+COSMOS_ENDPOINT=https://your-cosmos.documents.azure.com:443/
+
+GITHUB_CLIENT_ID=your-github-oauth-client-id
+GITHUB_CLIENT_SECRET=your-github-oauth-client-secret
+
+JWT_SECRET=your-32-char-minimum-secret
+```
+
+---
 
 ### 4. Start the dev server
 
@@ -319,13 +372,55 @@ The App Service has a **System-Assigned Managed Identity** — no credentials ar
 
 For **local development**, set `AZURE_OPENAI_KEY` and `COSMOS_KEY` in `.env.local`, or run `az login` with your account granted the same roles — `DefaultAzureCredential` will pick up your CLI session automatically.
 
-### After deploy — configure OAuth callback
+### Post-deploy configuration checklist
 
-Once deployed, update your GitHub OAuth App's callback URL:
+After `terraform apply` (or `./scripts/deploy.sh`) completes, run through these steps:
 
+**1. Get your app URL**
+```bash
+cd terraform && terraform output -raw web_app_url
+```
+
+**2. Add the production callback URL to your GitHub OAuth App**
+
+Go to [github.com/settings/developers](https://github.com/settings/developers) → your OAuth App → **Edit** and add a second callback URL:
 ```
 https://<your-app>.azurewebsites.net/api/github/callback
 ```
+
+**3. Verify Key Vault secret resolution**
+
+App Service resolves Key Vault References at startup. Check that `GITHUB_CLIENT_SECRET` and `JWT_SECRET` show as `Key vault Reference` (not `Custom`) in the portal, or run:
+```bash
+APP=$(cd terraform && terraform output -raw web_app_name)
+RG=$(cd terraform && terraform output -raw resource_group_name)
+az webapp config appsettings list --name "$APP" --resource-group "$RG" \
+  --query "[?name=='GITHUB_CLIENT_SECRET' || name=='JWT_SECRET']"
+```
+If the values still show the raw `@Microsoft.KeyVault(...)` string, the managed identity access policy hasn't propagated yet — wait 1–2 minutes and restart the app:
+```bash
+az webapp restart --name "$APP" --resource-group "$RG"
+```
+
+**4. Verify managed identity role assignments**
+
+Confirm the app can reach Azure OpenAI and Cosmos DB without keys by tailing the startup logs:
+```bash
+az webapp log tail --name "$APP" --resource-group "$RG"
+```
+A successful start shows `ready on http://0.0.0.0:8080`. Any `401 Unauthorized` or `403 Forbidden` errors from Azure OpenAI or Cosmos DB indicate the role assignments haven't propagated — Azure RBAC can take up to 5 minutes. Restart the app once they're in place.
+
+**5. Set your `.env.local` for local dev**
+```bash
+cd terraform && terraform output -raw env_local_snippet
+```
+Paste the output into `.env.local` in the repo root.
+
+**6. Smoke test**
+
+Open `https://<your-app>.azurewebsites.net`, click **Connect GitHub**, authorise the OAuth App, then open the editor and generate a wireframe. Check Application Insights → *Transaction search* to confirm the request was traced.
+
+---
 
 ### Tear down
 

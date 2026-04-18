@@ -13,9 +13,19 @@ output "web_app_name" {
   value       = azurerm_linux_web_app.this.name
 }
 
+output "openai_resource_name" {
+  description = "Azure OpenAI resource name — used when granting role assignments."
+  value       = azurerm_cognitive_account.openai.name
+}
+
 output "openai_endpoint" {
   description = "Azure OpenAI endpoint — matches AZURE_OPENAI_ENDPOINT in .env.local."
   value       = azurerm_cognitive_account.openai.endpoint
+}
+
+output "cosmos_account_name" {
+  description = "Cosmos DB account name — used when granting role assignments."
+  value       = azurerm_cosmosdb_account.this.name
 }
 
 output "openai_deployment_name" {
