@@ -146,7 +146,7 @@ export default function LandingPage() {
             const Icon = feature.icon;
             return (
               <Link
-                key={feature.id}
+                key={feature.title}
                 href={`/editor?type=${feature.title.toLowerCase().replace(/\s+/g, '-')}`}
                 style={{
                   backgroundColor: '#161b22',

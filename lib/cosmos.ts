@@ -61,7 +61,8 @@ export async function createBlueprint(data: Omit<StoredBlueprint, 'id' | 'create
     updatedAt: now,
   };
   const { resource } = await getContainer().items.create(item);
-  return resource!;
+  if (!resource) throw new Error('Cosmos DB create returned no resource');
+  return resource;
 }
 
 export async function updateBlueprint(
