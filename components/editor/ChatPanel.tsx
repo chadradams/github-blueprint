@@ -104,7 +104,8 @@ export default function ChatPanel({
       }}
     >
       {/* ── Header ── */}
-      <div style={{ padding: '12px 14px', borderBottom: '1px solid #30363d', flexShrink: 0 }}>
+      <div style={{ padding: '10px 14px', borderBottom: '1px solid #30363d', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {/* Row 1: branding + new button */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ background: 'linear-gradient(135deg, #8957e5, #1f6feb)', borderRadius: '6px', padding: '4px' }}>
@@ -129,24 +130,33 @@ export default function ChatPanel({
             </button>
           )}
         </div>
+
+        {/* Row 2: persistent type badge — always visible, toggles the selector */}
+        <button
+          onClick={() => setTypeOpen((o) => !o)}
+          title="Change blueprint type"
+          style={{
+            alignSelf: 'flex-start',
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            backgroundColor: `${currentMeta.color}12`,
+            border: `1px solid ${currentMeta.color}50`,
+            borderRadius: '20px', padding: '3px 10px 3px 7px',
+            cursor: 'pointer', transition: 'all 0.1s',
+          }}
+          className="hover:opacity-80"
+        >
+          <CurrentIcon style={{ color: currentMeta.color, width: '12px', height: '12px' }} />
+          <span style={{ color: currentMeta.color, fontSize: '11px', fontWeight: '600' }}>
+            {currentConfig.label}
+          </span>
+          <span style={{ color: currentMeta.color, fontSize: '9px', opacity: 0.7, marginLeft: '2px' }}>
+            {typeOpen ? '▲' : '▼'}
+          </span>
+        </button>
       </div>
 
       {/* ── Type selector (collapsible) ── */}
-      <div style={{ borderBottom: '1px solid #30363d', flexShrink: 0, overflow: 'hidden' }}>
-        <button
-          onClick={() => setTypeOpen((o) => !o)}
-          style={{
-            width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-            padding: '8px 14px', display: 'flex', alignItems: 'center', gap: '8px',
-            color: '#8b949e', fontSize: '12px', textAlign: 'left',
-          }}
-          className="hover:bg-[#21262d] transition-colors"
-        >
-          <CurrentIcon style={{ color: currentMeta.color, width: '13px', height: '13px' }} />
-          <span style={{ color: currentMeta.color, fontWeight: '600' }}>{currentConfig.label}</span>
-          <span style={{ marginLeft: 'auto', fontSize: '10px' }}>{typeOpen ? '▲' : '▼'}</span>
-        </button>
-
+      <div style={{ borderBottom: typeOpen ? '1px solid #30363d' : 'none', flexShrink: 0, overflow: 'hidden' }}>
         {typeOpen && (
           <div style={{ padding: '6px 10px 10px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
             {BLUEPRINT_TYPES.map((t) => {
