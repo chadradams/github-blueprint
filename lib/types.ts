@@ -1,5 +1,19 @@
 export type BlueprintType = 'wireframe' | 'system-diagram' | 'visual-design' | 'code-blueprint';
 
+export type ChatPhase = 'clarify' | 'generate' | 'refine';
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  isArtifact?: boolean;
+  isStreaming?: boolean;
+}
+
+// Sentinel prefixed to streamed responses that contain artifact code.
+// Distinct enough that it will never appear in generated code or prose.
+export const ARTIFACT_MARKER = '__BLUEPRINT_ARTIFACT__';
+
 export interface Blueprint {
   id: string;
   title: string;
