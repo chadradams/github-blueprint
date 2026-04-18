@@ -27,23 +27,27 @@ Copilot Blueprint is a GitHub-themed design tool that generates production-ready
 | Editor | Monaco Editor (`@monaco-editor/react`) |
 | Diagrams | Mermaid.js |
 | AI backend | Azure AI Foundry (Azure OpenAI) |
+| Infrastructure | Terraform (azurerm ~> 3.100) |
+| Observability | Azure Application Insights + Log Analytics |
 
-## Getting started
+---
 
-### 1. Clone the repo
+## Development
+
+### Prerequisites
+
+- Node.js >= 20 LTS
+- An Azure subscription with access to Azure OpenAI (GPT-4o)
+
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/chadradams/github-blueprint.git
 cd github-blueprint
-```
-
-### 2. Install dependencies
-
-```bash
 npm install
 ```
 
-### 3. Configure environment variables
+### 2. Configure environment variables
 
 ```bash
 cp .env.example .env.local
@@ -56,35 +60,95 @@ AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
 AZURE_OPENAI_KEY=your-api-key-here
 AZURE_OPENAI_DEPLOYMENT=gpt-4o
 AZURE_OPENAI_API_VERSION=2024-02-01
+
+# Optional — enables Application Insights in local dev (see Observability section)
+APPLICATIONINSIGHTS_CONNECTION_STRING=
 ```
 
 > **Where to find these values:**
 > - Endpoint and Key: Azure Portal → your OpenAI resource → *Keys and Endpoint*
 > - Deployment name: [Azure AI Foundry](https://ai.azure.com) → *Deployments*
+>
+> Or run `terraform output -raw env_local_snippet` after a Terraform apply to get all values pre-filled.
 
-### 4. Run the development server
+### 3. Start the dev server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). The app hot-reloads on file save.
+
+### Useful scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start Next.js dev server with hot reload |
+| `npm run build` | Production build (outputs to `.next/`) |
+| `npm run start` | Serve the production build locally |
+| `npm run lint` | Run ESLint across all source files |
+
+### How the streaming API route works
+
+`POST /api/generate` accepts `{ prompt, type }` and proxies a streaming request to Azure OpenAI. The response is a `ReadableStream` of plain text chunks — the client reads them with a `fetch` + `ReadableStreamDefaultReader` loop and appends each chunk to the Monaco editor in real time.
+
+```
+Browser → POST /api/generate → AzureOpenAI.chat.completions.create(stream:true)
+                                      ↓ chunks
+                             ReadableStream → Response → fetch reader → setOutput()
+```
+
+If the connection is interrupted mid-stream, the server-side `AbortController` is signalled via the `cancel()` callback on the `ReadableStream`, which stops token generation on the Azure side.
+
+### Project structure
+
+```
+github-blueprint/
+├── app/
+│   ├── layout.tsx               # Root layout with GitHub nav
+│   ├── page.tsx                 # Feature landing page
+│   ├── dashboard/page.tsx       # Blueprint gallery with search + filter
+│   ├── editor/page.tsx          # Split-panel editor (prompt + artifact)
+│   └── api/generate/route.ts   # Streaming Azure OpenAI proxy
+├── components/
+│   ├── GitHubNav.tsx            # GitHub-style top navigation bar
+│   └── editor/
+│       ├── TypeSelector.tsx     # Blueprint type picker (4 types)
+│       ├── PromptPanel.tsx      # Left panel: prompt, examples, generate button
+│       └── ArtifactPanel.tsx    # Right panel: Monaco editor + preview tabs
+├── lib/
+│   ├── types.ts                 # BlueprintType union + BLUEPRINT_TYPES config
+│   └── prompts.ts               # System prompts for each blueprint type
+└── terraform/                   # Azure infrastructure (see Infrastructure section)
+```
+
+### Environment variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `AZURE_OPENAI_ENDPOINT` | Yes | Azure OpenAI resource URL |
+| `AZURE_OPENAI_KEY` | Yes | Azure OpenAI API key |
+| `AZURE_OPENAI_DEPLOYMENT` | Yes | Model deployment name (e.g. `gpt-4o`) |
+| `AZURE_OPENAI_API_VERSION` | No | API version — default `2024-02-01` |
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | No | Enables local telemetry (see Observability) |
+
+---
 
 ## Infrastructure (Terraform)
 
-The `terraform/` directory provisions all required Azure resources — Azure OpenAI, App Service, and Application Insights — in one apply.
+The `terraform/` directory provisions all required Azure resources in a single `apply`.
 
 ### Prerequisites
 
 - [Terraform](https://developer.hashicorp.com/terraform/install) >= 1.5
-- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) and an active subscription
+- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) logged in to your subscription
 
-### Deploy
+### Deploy infrastructure
 
 ```bash
 cd terraform
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your project name and preferred regions
+# Edit terraform.tfvars — set project_name, location, openai_location, sku
 
 az login
 terraform init
@@ -92,7 +156,7 @@ terraform plan -out=blueprint.tfplan
 terraform apply blueprint.tfplan
 ```
 
-After apply, grab your `.env.local` values in one command:
+After apply, print a ready-to-paste `.env.local` block:
 
 ```bash
 terraform output -raw env_local_snippet
@@ -100,68 +164,153 @@ terraform output -raw env_local_snippet
 
 ### Deployed resources
 
-| Resource | Purpose |
-|---|---|
-| `azurerm_resource_group` | Container for all resources |
-| `azurerm_cognitive_account` (OpenAI) | Azure AI Foundry endpoint |
-| `azurerm_cognitive_deployment` (gpt-4o) | Model deployment |
-| `azurerm_service_plan` | Linux App Service Plan |
-| `azurerm_linux_web_app` | Next.js host with env vars pre-wired |
-| `azurerm_log_analytics_workspace` | Log sink |
-| `azurerm_application_insights` | Performance + error monitoring |
+| Resource | Name pattern | Purpose |
+|---|---|---|
+| `azurerm_resource_group` | `<project>-<env>-rg` | Container for all resources |
+| `azurerm_cognitive_account` | `<project>-oai-<suffix>` | Azure OpenAI / AI Foundry endpoint |
+| `azurerm_cognitive_deployment` | `gpt-4o` | GPT-4o model deployment (Standard SKU) |
+| `azurerm_service_plan` | `<project>-plan-<suffix>` | Linux App Service Plan |
+| `azurerm_linux_web_app` | `<project>-app-<suffix>` | Next.js host — env vars pre-wired from OpenAI outputs |
+| `azurerm_log_analytics_workspace` | `<project>-logs-<suffix>` | Centralised log sink |
+| `azurerm_application_insights` | `<project>-insights-<suffix>` | Performance + error monitoring |
+
+All resource names include a random 6-character suffix to ensure global uniqueness.
+
+### Terraform variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `project_name` | `copilot-blueprint` | Base name for all resources |
+| `environment` | `dev` | Tag: `dev`, `staging`, or `prod` |
+| `location` | `eastus` | Region for App Service + observability |
+| `openai_location` | `eastus` | Region for Azure OpenAI (must support GPT-4o) |
+| `openai_deployment_name` | `gpt-4o` | Model deployment name |
+| `openai_model_version` | `2024-05-13` | GPT-4o model version |
+| `openai_capacity` | `10` | Tokens-per-minute capacity (in thousands) |
+| `app_service_sku` | `B1` | App Service SKU — use `P1v3`+ for production |
+| `log_retention_days` | `30` | Log Analytics retention period |
 
 ### Deploy the app after `terraform apply`
 
 ```bash
-# From repo root — build and zip-deploy to the provisioned App Service
+# Build and zip-deploy from repo root
 npm run build
-zip -r app.zip .next package.json package-lock.json public next.config.mjs
+zip -r app.zip .next package.json package-lock.json next.config.mjs
 
 az webapp deploy \
   --resource-group $(cd terraform && terraform output -raw resource_group_name) \
-  --name $(cd terraform && terraform output -raw web_app_name) \
-  --src-path app.zip \
-  --type zip
+  --name        $(cd terraform && terraform output -raw web_app_name) \
+  --src-path    app.zip \
+  --type        zip
 ```
 
-## Project structure
+### Tear down
 
-```
-github-blueprint/
-├── app/
-│   ├── layout.tsx              # Root layout with GitHub nav
-│   ├── page.tsx                # Landing page
-│   ├── dashboard/page.tsx      # Blueprint gallery
-│   ├── editor/page.tsx         # Split-panel editor
-│   └── api/generate/route.ts  # Streaming Azure AI proxy
-├── components/
-│   ├── GitHubNav.tsx           # GitHub-style top navigation
-│   └── editor/
-│       ├── TypeSelector.tsx    # Blueprint type picker
-│       ├── PromptPanel.tsx     # Left panel: prompt + settings
-│       └── ArtifactPanel.tsx   # Right panel: Monaco + preview
-└── lib/
-    ├── types.ts                # Blueprint types and config
-    └── prompts.ts              # System prompts for each type
+```bash
+cd terraform
+terraform destroy
 ```
 
-## Environment variables
+---
 
-| Variable | Required | Description |
-|---|---|---|
-| `AZURE_OPENAI_ENDPOINT` | Yes | Azure OpenAI resource URL |
-| `AZURE_OPENAI_KEY` | Yes | Azure OpenAI API key |
-| `AZURE_OPENAI_DEPLOYMENT` | Yes | Model deployment name (e.g. `gpt-4o`) |
-| `AZURE_OPENAI_API_VERSION` | No | API version (default: `2024-02-01`) |
+## Observability
+
+Copilot Blueprint ships with Azure Application Insights wired in via Terraform. Here's how to use it in each environment.
+
+### In production (App Service)
+
+The `APPLICATIONINSIGHTS_CONNECTION_STRING` and `ApplicationInsightsAgent_EXTENSION_VERSION=~3` app settings are set automatically by Terraform. The App Service Node.js agent auto-instruments:
+
+- HTTP request traces (including the `/api/generate` streaming route)
+- Dependency calls (outbound Azure OpenAI requests, with duration + status)
+- Unhandled exceptions and server-side errors
+- Custom events and metrics you emit with the SDK
+
+No code changes are required — the agent attaches at startup.
+
+### In local development
+
+Add the connection string to `.env.local` to send telemetry from your local machine to the same Application Insights resource:
+
+```env
+APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=...;IngestionEndpoint=...
+```
+
+Get the value from Terraform:
+
+```bash
+cd terraform && terraform output -raw app_insights_connection_string
+```
+
+Or from the Azure Portal: **Application Insights** → your resource → *Overview* → *Connection String*.
+
+### Viewing telemetry
+
+| What to look at | Where in Azure Portal |
+|---|---|
+| Live request traces | Application Insights → *Transaction search* |
+| Request failures + exceptions | Application Insights → *Failures* |
+| Latency percentiles (p50/p95/p99) | Application Insights → *Performance* |
+| Azure OpenAI dependency durations | Application Insights → *Performance* → *Dependencies* |
+| Custom log queries | Log Analytics → *Logs* (KQL) |
+
+### Useful KQL queries
+
+Open **Log Analytics → Logs** and run against your workspace.
+
+**All failed generate requests in the last 24 hours:**
+```kusto
+requests
+| where timestamp > ago(24h)
+| where url contains "/api/generate"
+| where success == false
+| project timestamp, resultCode, duration, cloud_RoleInstance
+| order by timestamp desc
+```
+
+**p50 / p95 / p99 generation latency by hour:**
+```kusto
+requests
+| where timestamp > ago(7d)
+| where url contains "/api/generate"
+| summarize
+    p50 = percentile(duration, 50),
+    p95 = percentile(duration, 95),
+    p99 = percentile(duration, 99)
+  by bin(timestamp, 1h)
+| order by timestamp desc
+```
+
+**Azure OpenAI dependency call durations:**
+```kusto
+dependencies
+| where timestamp > ago(24h)
+| where type == "HTTP"
+| where target contains "openai.azure.com"
+| summarize avg(duration), max(duration), count() by bin(timestamp, 5m)
+| order by timestamp desc
+```
+
+**Unhandled exceptions:**
+```kusto
+exceptions
+| where timestamp > ago(24h)
+| project timestamp, type, outerMessage, cloud_RoleInstance
+| order by timestamp desc
+```
+
+---
 
 ## Supported blueprint types
 
 | Type | Output format | Preview |
 |---|---|---|
-| UI Wireframe | HTML | iframe |
-| System Diagram | Mermaid | Rendered diagram |
-| Visual Design | HTML + CSS | iframe |
-| Code Blueprint | TypeScript | Code only |
+| UI Wireframe | HTML | Sandboxed iframe |
+| System Diagram | Mermaid | Rendered diagram (mermaid.js) |
+| Visual Design | HTML + CSS | Sandboxed iframe |
+| Code Blueprint | TypeScript | Code editor only |
+
+---
 
 ## License
 
