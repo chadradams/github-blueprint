@@ -6,6 +6,14 @@ Copilot Blueprint is a GitHub-themed design tool that generates production-ready
 
 ![Copilot Blueprint editor — split-panel view with chat on the left and Monaco code editor on the right](public/ui-preview.svg)
 
+### System diagrams
+
+![System diagram — architecture preview showing nodes and connections for the API service](public/system-diagram-preview.svg)
+
+### PR & issue linking
+
+![PR linking — context bar loaded with PR #87, chat grounded in PR diff, metrics dashboard wireframe](public/pr-linking-preview.svg)
+
 ## Features
 
 - **UI Wireframes** — Low-fidelity HTML layouts for pages and components

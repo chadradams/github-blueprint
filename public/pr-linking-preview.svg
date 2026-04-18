@@ -1,0 +1,252 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+  <defs>
+    <clipPath id="screen-clip">
+      <rect width="1200" height="630" rx="10"/>
+    </clipPath>
+    <linearGradient id="copilot-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8957e5"/>
+      <stop offset="100%" stop-color="#1f6feb"/>
+    </linearGradient>
+    <linearGradient id="avatar-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8957e5"/>
+      <stop offset="100%" stop-color="#1f6feb"/>
+    </linearGradient>
+  </defs>
+
+  <g clip-path="url(#screen-clip)">
+
+    <!-- Canvas -->
+    <rect width="1200" height="630" fill="#0d1117"/>
+
+    <!-- Top nav -->
+    <rect width="1200" height="52" fill="#161b22"/>
+    <rect y="52" width="1200" height="1" fill="#30363d"/>
+    <g transform="translate(20,13)">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" fill="#e6edf3"/>
+    </g>
+    <rect x="56" y="20" width="1" height="12" fill="#30363d"/>
+    <text x="66" y="31" fill="#e6edf3" font-size="13" font-weight="600">Copilot Blueprint</text>
+    <text x="218" y="31" fill="#8b949e" font-size="13">Dashboard</text>
+    <text x="298" y="31" fill="#8b949e" font-size="13">Editor</text>
+    <!-- User avatar (authenticated) -->
+    <circle cx="1162" cy="26" r="14" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+    <text x="1162" y="31" fill="#8b949e" font-size="11" text-anchor="middle" font-weight="600">CR</text>
+
+    <!-- Editor sub-header -->
+    <rect y="53" width="1200" height="38" fill="#161b22"/>
+    <rect y="91" width="1200" height="1" fill="#30363d"/>
+    <text x="16" y="77" fill="#58a6ff" font-size="12">GitHub</text>
+    <text x="63" y="77" fill="#6e7681" font-size="12">&#8250;</text>
+    <text x="73" y="77" fill="#58a6ff" font-size="12">Copilot Blueprint</text>
+    <text x="176" y="77" fill="#6e7681" font-size="12">&#8250;</text>
+    <text x="186" y="77" fill="#e6edf3" font-size="12">New blueprint</text>
+    <rect x="1060" y="60" width="120" height="24" rx="5" fill="none" stroke="#3fb950" stroke-width="1"/>
+    <text x="1120" y="76" fill="#3fb950" font-size="11" text-anchor="middle">Save blueprint</text>
+
+    <!-- Left panel -->
+    <rect x="0" y="92" width="360" height="538" fill="#161b22"/>
+    <rect x="360" y="92" width="1" height="538" fill="#30363d"/>
+
+    <!-- Context bar — loaded state with PR chips -->
+    <rect x="0" y="92" width="360" height="44" fill="#0d1117"/>
+    <rect y="136" width="360" height="1" fill="#30363d"/>
+    <!-- Repo chip -->
+    <rect x="8" y="108" width="134" height="20" rx="10" fill="#58a6ff" fill-opacity="0.08" stroke="#58a6ff" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="75" y="122" fill="#58a6ff" font-size="10" text-anchor="middle">chadradams/api-service</text>
+    <!-- Branch chip -->
+    <rect x="148" y="108" width="112" height="20" rx="10" fill="#8b949e" fill-opacity="0.1" stroke="#8b949e" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="166" y="118" fill="#8b949e" font-size="9">&#8888;</text>
+    <text x="204" y="122" fill="#8b949e" font-size="10" text-anchor="middle">feat/metrics-dash</text>
+    <!-- PR chip -->
+    <rect x="266" y="108" width="58" height="20" rx="10" fill="#d29922" fill-opacity="0.1" stroke="#d29922" stroke-opacity="0.25" stroke-width="1"/>
+    <text x="295" y="122" fill="#d29922" font-size="10" text-anchor="middle">PR #87</text>
+    <!-- Clear button -->
+    <rect x="330" y="111" width="22" height="14" rx="7" fill="#8b949e" fill-opacity="0.12"/>
+    <text x="341" y="122" fill="#6e7681" font-size="10" text-anchor="middle">&#10005;</text>
+
+    <!-- Chat header -->
+    <rect x="0" y="137" width="360" height="42" fill="#161b22"/>
+    <rect y="179" width="360" height="1" fill="#30363d"/>
+    <text x="12" y="163" fill="#e6edf3" font-size="13" font-weight="600">Blueprint chat</text>
+    <rect x="228" y="147" width="120" height="22" rx="11" fill="#58a6ff" fill-opacity="0.09" stroke="#58a6ff" stroke-opacity="0.22" stroke-width="1"/>
+    <rect x="237" y="153" width="10" height="10" rx="2" fill="#58a6ff" fill-opacity="0.7"/>
+    <text x="253" y="162" fill="#58a6ff" font-size="10" font-weight="600">UI Wireframe · HTML</text>
+
+    <!-- PR context loaded notification -->
+    <rect x="12" y="190" width="336" height="36" rx="6" fill="#d29922" fill-opacity="0.07" stroke="#d29922" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="24" y="204" fill="#d29922" font-size="10" font-weight="600">PR #87 context loaded</text>
+    <text x="24" y="218" fill="#8b949e" font-size="10">feat/metrics-dash · 6 files changed · +342 -18</text>
+
+    <!-- User message 1 -->
+    <rect x="80" y="240" width="268" height="40" rx="10" fill="#1f6feb"/>
+    <text x="214" y="257" fill="white" font-size="12" text-anchor="middle">Generate a wireframe for</text>
+    <text x="214" y="272" fill="white" font-size="12" text-anchor="middle">the new metrics dashboard</text>
+    <text x="340" y="290" fill="#6e7681" font-size="10" text-anchor="end">You</text>
+
+    <!-- Assistant sees PR -->
+    <circle cx="22" cy="318" r="12" fill="url(#avatar-grad)"/>
+    <text x="22" y="323" fill="white" font-size="9" font-weight="700" text-anchor="middle">Co</text>
+    <rect x="42" y="304" width="303" height="52" rx="10" fill="#21262d"/>
+    <text x="55" y="320" fill="#8b949e" font-size="11">I can see PR #87 adds 4 new metric</text>
+    <text x="55" y="335" fill="#8b949e" font-size="11">cards and a request volume chart.</text>
+    <text x="55" y="350" fill="#8b949e" font-size="11">Should I match the existing card style?</text>
+
+    <!-- User reply -->
+    <rect x="80" y="370" width="268" height="30" rx="10" fill="#1f6feb"/>
+    <text x="214" y="390" fill="white" font-size="12" text-anchor="middle">Yes, use the GitHub Primer tokens</text>
+
+    <!-- Artifact notification -->
+    <rect x="42" y="414" width="303" height="54" rx="8" fill="#21262d" stroke="#3fb950" stroke-opacity="0.2" stroke-width="1"/>
+    <rect x="42" y="414" width="3" height="54" rx="1" fill="#3fb950"/>
+    <rect x="54" y="426" width="20" height="20" rx="4" fill="#3fb950" fill-opacity="0.12"/>
+    <text x="64" y="439" fill="#3fb950" font-size="11" text-anchor="middle">&#9670;</text>
+    <text x="82" y="432" fill="#e6edf3" font-size="11" font-weight="600">Wireframe generated</text>
+    <text x="82" y="447" fill="#8b949e" font-size="10">UI Wireframe · HTML · 87 lines</text>
+    <circle cx="328" cy="434" r="8" fill="#3fb950" fill-opacity="0.12"/>
+    <text x="328" y="438" fill="#3fb950" font-size="11" text-anchor="middle">&#10003;</text>
+
+    <!-- User refine -->
+    <rect x="80" y="482" width="268" height="30" rx="10" fill="#1f6feb"/>
+    <text x="214" y="502" fill="white" font-size="12" text-anchor="middle">Add a live requests-per-second gauge</text>
+
+    <!-- Typing indicator -->
+    <circle cx="22" cy="535" r="12" fill="url(#avatar-grad)"/>
+    <text x="22" y="540" fill="white" font-size="9" font-weight="700" text-anchor="middle">Co</text>
+    <rect x="42" y="521" width="80" height="28" rx="8" fill="#21262d"/>
+    <circle cx="62" cy="536" r="4" fill="#8b949e"/>
+    <circle cx="76" cy="536" r="4" fill="#8b949e" fill-opacity="0.55"/>
+    <circle cx="90" cy="536" r="4" fill="#8b949e" fill-opacity="0.25"/>
+
+    <!-- Input bar -->
+    <rect x="0" y="575" width="360" height="55" fill="#161b22"/>
+    <rect y="575" width="360" height="1" fill="#30363d"/>
+    <rect x="10" y="583" width="340" height="38" rx="8" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
+    <text x="22" y="607" fill="#6e7681" font-size="12">Describe changes to refine…</text>
+    <rect x="316" y="589" width="28" height="26" rx="6" fill="url(#copilot-grad)"/>
+    <text x="330" y="606" fill="white" font-size="13" text-anchor="middle">&#8593;</text>
+
+    <!-- ── Right panel ──────────────────────────────────────────────── -->
+
+    <!-- Tab bar -->
+    <rect x="361" y="92" width="839" height="38" fill="#161b22"/>
+    <rect x="361" y="130" width="839" height="1" fill="#30363d"/>
+    <text x="401" y="116" fill="#8b949e" font-size="12" text-anchor="middle">Code</text>
+    <rect x="441" y="92" width="82" height="38" fill="#0d1117"/>
+    <text x="482" y="116" fill="#e6edf3" font-size="12" text-anchor="middle">Preview</text>
+    <rect x="441" y="129" width="82" height="2" fill="#58a6ff"/>
+
+    <!-- Preview background -->
+    <rect x="361" y="131" width="839" height="499" fill="#0d1117"/>
+
+    <!-- Page title row -->
+    <text x="430" y="162" fill="#e6edf3" font-size="18" font-weight="700">API Metrics</text>
+    <rect x="556" y="149" width="80" height="20" rx="4" fill="#d29922" fill-opacity="0.1" stroke="#d29922" stroke-opacity="0.25" stroke-width="1"/>
+    <text x="596" y="163" fill="#d29922" font-size="10" text-anchor="middle">PR #87 · draft</text>
+    <rect x="1082" y="148" width="68" height="24" rx="5" fill="none" stroke="#30363d" stroke-width="1"/>
+    <text x="1116" y="164" fill="#8b949e" font-size="11" text-anchor="middle">Today &#9660;</text>
+
+    <!-- ── Stat cards row ───────────────────────────────────────────── -->
+
+    <!-- Card 1: Requests -->
+    <rect x="430" y="180" width="172" height="80" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+    <text x="446" y="200" fill="#8b949e" font-size="11">Total requests</text>
+    <text x="446" y="228" fill="#58a6ff" font-size="22" font-weight="700">12,847</text>
+    <text x="446" y="248" fill="#3fb950" font-size="10">&#8593; 12% from yesterday</text>
+
+    <!-- Card 2: Latency -->
+    <rect x="614" y="180" width="172" height="80" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+    <text x="630" y="200" fill="#8b949e" font-size="11">Avg latency</text>
+    <text x="630" y="228" fill="#e6edf3" font-size="22" font-weight="700">142ms</text>
+    <text x="630" y="248" fill="#3fb950" font-size="10">&#8595; 8ms from yesterday</text>
+
+    <!-- Card 3: Errors -->
+    <rect x="798" y="180" width="172" height="80" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+    <text x="814" y="200" fill="#8b949e" font-size="11">Errors (24h)</text>
+    <text x="814" y="228" fill="#f85149" font-size="22" font-weight="700">23</text>
+    <text x="814" y="248" fill="#3fb950" font-size="10">&#8595; 5 from yesterday</text>
+
+    <!-- Card 4: Uptime -->
+    <rect x="982" y="180" width="168" height="80" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+    <text x="998" y="200" fill="#8b949e" font-size="11">Uptime</text>
+    <text x="998" y="228" fill="#3fb950" font-size="22" font-weight="700">99.9%</text>
+    <text x="998" y="248" fill="#8b949e" font-size="10">30-day rolling</text>
+
+    <!-- ── Request volume chart ────────────────────────────────────── -->
+    <rect x="430" y="274" width="720" height="140" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+    <text x="446" y="294" fill="#e6edf3" font-size="12" font-weight="600">Request Volume</text>
+    <text x="1010" y="294" fill="#8b949e" font-size="10" text-anchor="end">Last 24 hours</text>
+    <!-- Chart Y-axis labels -->
+    <text x="444" y="390" fill="#6e7681" font-size="9" text-anchor="end">2k</text>
+    <text x="444" y="355" fill="#6e7681" font-size="9" text-anchor="end">4k</text>
+    <text x="444" y="320" fill="#6e7681" font-size="9" text-anchor="end">6k</text>
+    <!-- Grid lines -->
+    <line x1="450" y1="390" x2="1140" y2="390" stroke="#21262d" stroke-width="1"/>
+    <line x1="450" y1="355" x2="1140" y2="355" stroke="#21262d" stroke-width="1"/>
+    <line x1="450" y1="320" x2="1140" y2="320" stroke="#21262d" stroke-width="1"/>
+    <!-- Area chart shape (filled polygon) -->
+    <polygon points="450,390 490,370 540,360 590,350 640,355 690,340 740,325 790,330 840,320 890,328 940,322 990,330 1040,318 1090,325 1140,315 1140,395 450,395" fill="#1f6feb" fill-opacity="0.15"/>
+    <!-- Line on top of area -->
+    <polyline points="450,390 490,370 540,360 590,350 640,355 690,340 740,325 790,330 840,320 890,328 940,322 990,330 1040,318 1090,325 1140,315" fill="none" stroke="#58a6ff" stroke-width="2"/>
+    <!-- X-axis labels -->
+    <text x="450" y="405" fill="#6e7681" font-size="9">00:00</text>
+    <text x="590" y="405" fill="#6e7681" font-size="9">06:00</text>
+    <text x="740" y="405" fill="#6e7681" font-size="9">12:00</text>
+    <text x="890" y="405" fill="#6e7681" font-size="9">18:00</text>
+    <text x="1100" y="405" fill="#6e7681" font-size="9">now</text>
+
+    <!-- ── Recent requests table ───────────────────────────────────── -->
+    <rect x="430" y="428" width="720" height="170" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+    <text x="446" y="448" fill="#e6edf3" font-size="12" font-weight="600">Recent Requests</text>
+    <rect x="431" y="456" width="718" height="1" fill="#30363d"/>
+    <!-- Table header -->
+    <text x="446" y="471" fill="#6e7681" font-size="10">Method</text>
+    <text x="520" y="471" fill="#6e7681" font-size="10">Path</text>
+    <text x="780" y="471" fill="#6e7681" font-size="10">Status</text>
+    <text x="860" y="471" fill="#6e7681" font-size="10">Duration</text>
+    <text x="960" y="471" fill="#6e7681" font-size="10">Time</text>
+    <rect x="431" y="477" width="718" height="1" fill="#21262d"/>
+    <!-- Row 1 -->
+    <rect x="446" y="484" width="36" height="14" rx="3" fill="#238636" fill-opacity="0.2"/>
+    <text x="464" y="495" fill="#3fb950" font-size="9" text-anchor="middle">GET</text>
+    <text x="520" y="495" fill="#8b949e" font-size="10">/api/blueprints</text>
+    <rect x="780" y="484" width="32" height="14" rx="3" fill="#238636" fill-opacity="0.15"/>
+    <text x="796" y="495" fill="#3fb950" font-size="9" text-anchor="middle">200</text>
+    <text x="860" y="495" fill="#8b949e" font-size="10">48ms</text>
+    <text x="960" y="495" fill="#6e7681" font-size="10">just now</text>
+    <!-- Row 2 -->
+    <rect x="446" y="504" width="38" height="14" rx="3" fill="#1f6feb" fill-opacity="0.2"/>
+    <text x="465" y="515" fill="#58a6ff" font-size="9" text-anchor="middle">POST</text>
+    <text x="520" y="515" fill="#8b949e" font-size="10">/api/generate</text>
+    <rect x="780" y="504" width="32" height="14" rx="3" fill="#238636" fill-opacity="0.15"/>
+    <text x="796" y="515" fill="#3fb950" font-size="9" text-anchor="middle">200</text>
+    <text x="860" y="515" fill="#8b949e" font-size="10">2,140ms</text>
+    <text x="960" y="515" fill="#6e7681" font-size="10">12s ago</text>
+    <!-- Row 3 -->
+    <rect x="446" y="524" width="36" height="14" rx="3" fill="#238636" fill-opacity="0.2"/>
+    <text x="464" y="535" fill="#3fb950" font-size="9" text-anchor="middle">GET</text>
+    <text x="520" y="535" fill="#8b949e" font-size="10">/api/github/me</text>
+    <rect x="780" y="524" width="32" height="14" rx="3" fill="#238636" fill-opacity="0.15"/>
+    <text x="796" y="535" fill="#3fb950" font-size="9" text-anchor="middle">200</text>
+    <text x="860" y="535" fill="#8b949e" font-size="10">12ms</text>
+    <text x="960" y="535" fill="#6e7681" font-size="10">34s ago</text>
+    <!-- Row 4 -->
+    <rect x="446" y="544" width="38" height="14" rx="3" fill="#1f6feb" fill-opacity="0.2"/>
+    <text x="465" y="555" fill="#58a6ff" font-size="9" text-anchor="middle">POST</text>
+    <text x="520" y="555" fill="#8b949e" font-size="10">/api/blueprints</text>
+    <rect x="780" y="544" width="32" height="14" rx="3" fill="#238636" fill-opacity="0.15"/>
+    <text x="796" y="555" fill="#3fb950" font-size="9" text-anchor="middle">201</text>
+    <text x="860" y="555" fill="#8b949e" font-size="10">98ms</text>
+    <text x="960" y="555" fill="#6e7681" font-size="10">1m ago</text>
+    <!-- Row 5 -->
+    <rect x="446" y="564" width="38" height="14" rx="3" fill="#da3633" fill-opacity="0.15"/>
+    <text x="465" y="575" fill="#f85149" font-size="9" text-anchor="middle">POST</text>
+    <text x="520" y="575" fill="#8b949e" font-size="10">/api/generate</text>
+    <rect x="780" y="564" width="32" height="14" rx="3" fill="#da3633" fill-opacity="0.15"/>
+    <text x="796" y="575" fill="#f85149" font-size="9" text-anchor="middle">500</text>
+    <text x="860" y="575" fill="#8b949e" font-size="10">30,001ms</text>
+    <text x="960" y="575" fill="#6e7681" font-size="10">3m ago</text>
+
+    <!-- Panel border -->
+    <rect width="1200" height="630" rx="10" fill="none" stroke="#30363d" stroke-width="1"/>
+  </g>
+</svg>
