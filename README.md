@@ -4,7 +4,7 @@
 
 Copilot Blueprint is a GitHub-themed design tool that generates production-ready design artifacts from natural language. It connects to **Azure AI Foundry** as its AI backend, renders output in a Monaco code editor with live preview, and integrates directly with GitHub for repo/issue context, OAuth authentication, and blueprint persistence.
 
-![Blueprint type selector showing Wireframe, System Diagram, Visual Design, and Code Blueprint options](https://via.placeholder.com/900x480/0d1117/a371f7?text=Copilot+Blueprint)
+![Copilot Blueprint editor — split-panel view with chat on the left and Monaco code editor on the right](public/ui-preview.svg)
 
 ## Features
 

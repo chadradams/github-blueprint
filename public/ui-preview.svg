@@ -1,0 +1,224 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+  <defs>
+    <clipPath id="screen-clip">
+      <rect width="1200" height="630" rx="10"/>
+    </clipPath>
+    <linearGradient id="copilot-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8957e5"/>
+      <stop offset="100%" style="stop-color:#1f6feb"/>
+    </linearGradient>
+    <linearGradient id="avatar-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8957e5"/>
+      <stop offset="100%" style="stop-color:#1f6feb"/>
+    </linearGradient>
+  </defs>
+
+  <g clip-path="url(#screen-clip)">
+    <!-- Canvas background -->
+    <rect width="1200" height="630" fill="#0d1117"/>
+
+    <!-- ── Top nav ─────────────────────────────────────────────────────── -->
+    <rect width="1200" height="52" fill="#161b22"/>
+    <rect y="52" width="1200" height="1" fill="#30363d"/>
+
+    <!-- GitHub logo -->
+    <g transform="translate(20, 14)">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" fill="#e6edf3" transform="scale(1.1)"/>
+    </g>
+    <rect x="58" y="20" width="1" height="12" fill="#30363d"/>
+    <text x="68" y="31" fill="#e6edf3" font-size="13" font-weight="600">Copilot Blueprint</text>
+    <rect x="68" y="36" width="110" height="1" fill="#30363d" opacity="0.4"/>
+
+    <!-- Nav items -->
+    <text x="220" y="31" fill="#8b949e" font-size="13">Dashboard</text>
+    <text x="300" y="31" fill="#8b949e" font-size="13">Editor</text>
+
+    <!-- Connect GitHub button (right side) -->
+    <rect x="1060" y="14" width="120" height="26" rx="6" fill="url(#copilot-grad)"/>
+    <text x="1120" y="31" fill="white" font-size="12" font-weight="500" text-anchor="middle">Connect GitHub</text>
+
+    <!-- ── Editor sub-header ──────────────────────────────────��────────── -->
+    <rect y="53" width="1200" height="38" fill="#161b22"/>
+    <rect y="91" width="1200" height="1" fill="#30363d"/>
+
+    <!-- Breadcrumb -->
+    <text x="16" y="77" fill="#58a6ff" font-size="12">GitHub</text>
+    <text x="65" y="77" fill="#6e7681" font-size="12">›</text>
+    <text x="75" y="77" fill="#58a6ff" font-size="12">Copilot Blueprint</text>
+    <text x="178" y="77" fill="#6e7681" font-size="12">›</text>
+    <text x="188" y="77" fill="#e6edf3" font-size="12">New blueprint</text>
+
+    <!-- Save button -->
+    <rect x="1060" y="60" width="120" height="24" rx="5" fill="none" stroke="#30363d" stroke-width="1"/>
+    <text x="1120" y="76" fill="#8b949e" font-size="11" text-anchor="middle">Save blueprint</text>
+
+    <!-- ── Left panel (chat) ──────────────────────────────────────────── -->
+    <rect x="0" y="92" width="360" height="538" fill="#161b22"/>
+    <rect x="360" y="92" width="1" height="538" fill="#30363d"/>
+
+    <!-- GitHub context bar -->
+    <rect x="0" y="92" width="360" height="44" fill="#0d1117"/>
+    <rect y="136" width="360" height="1" fill="#30363d"/>
+    <text x="12" y="119" fill="#8b949e" font-size="11">Repository context</text>
+    <!-- Repo chip -->
+    <rect x="108" y="108" width="130" height="20" rx="10" fill="#58a6ff15" stroke="#58a6ff30" stroke-width="1"/>
+    <text x="173" y="122" fill="#58a6ff" font-size="10" text-anchor="middle">chadradams/api-service</text>
+    <!-- Issue chip -->
+    <rect x="244" y="108" width="70" height="20" rx="10" fill="#d2992215" stroke="#d2992230" stroke-width="1"/>
+    <text x="279" y="122" fill="#d29922" font-size="10" text-anchor="middle">Issue #42</text>
+
+    <!-- Chat header with type badge -->
+    <rect x="0" y="137" width="360" height="42" fill="#161b22"/>
+    <rect y="179" width="360" height="1" fill="#30363d"/>
+    <text x="12" y="163" fill="#e6edf3" font-size="13" font-weight="600">Blueprint chat</text>
+    <!-- Type badge -->
+    <rect x="230" y="147" width="118" height="22" rx="11" fill="#58a6ff18" stroke="#58a6ff35" stroke-width="1"/>
+    <rect x="239" y="153" width="10" height="10" rx="2" fill="#58a6ff" opacity="0.7"/>
+    <text x="255" y="162" fill="#58a6ff" font-size="10" font-weight="600">UI Wireframe · HTML</text>
+
+    <!-- Chat messages -->
+    <!-- User message -->
+    <rect x="80" y="192" width="268" height="52" rx="10" fill="#1f6feb" rx="12"/>
+    <text x="214" y="213" fill="white" font-size="12" text-anchor="middle">Design a settings page for</text>
+    <text x="214" y="229" fill="white" font-size="12" text-anchor="middle">the API service dashboard</text>
+    <text x="340" y="252" fill="#6e7681" font-size="10" text-anchor="end">You</text>
+
+    <!-- Assistant message -->
+    <circle cx="22" cy="280" r="12" fill="url(#avatar-grad)"/>
+    <text x="22" y="285" fill="white" font-size="9" text-anchor="middle" font-weight="700">Co</text>
+    <rect x="42" y="266" width="303" height="42" rx="10" fill="#21262d"/>
+    <text x="55" y="283" fill="#8b949e" font-size="11">Let me clarify a few things:</text>
+    <text x="55" y="298" fill="#8b949e" font-size="11">Should this match your existing nav style?</text>
+
+    <!-- User reply -->
+    <rect x="80" y="322" width="268" height="30" rx="10" fill="#1f6feb"/>
+    <text x="214" y="342" fill="white" font-size="12" text-anchor="middle">Yes, GitHub Primer dark theme</text>
+
+    <!-- Artifact notification -->
+    <rect x="42" y="366" width="303" height="56" rx="8" fill="#21262d" stroke="#3fb95030" stroke-width="1"/>
+    <rect x="42" y="366" width="3" height="56" rx="1" fill="#3fb950"/>
+    <rect x="54" y="378" width="20" height="20" rx="4" fill="#3fb95020"/>
+    <text x="64" y="392" fill="#3fb950" font-size="14" text-anchor="middle">⬡</text>
+    <text x="82" y="384" fill="#e6edf3" font-size="11" font-weight="600">Wireframe generated</text>
+    <text x="82" y="399" fill="#8b949e" font-size="10">UI Wireframe · HTML · 94 lines</text>
+    <circle cx="328" cy="387" r="8" fill="#3fb95020"/>
+    <text x="328" y="391" fill="#3fb950" font-size="11" text-anchor="middle">✓</text>
+
+    <!-- Follow-up user message -->
+    <rect x="80" y="438" width="268" height="30" rx="10" fill="#1f6feb"/>
+    <text x="214" y="458" fill="white" font-size="12" text-anchor="middle">Add a danger zone section</text>
+
+    <!-- Streaming indicator -->
+    <circle cx="22" cy="495" r="12" fill="url(#avatar-grad)"/>
+    <text x="22" y="500" fill="white" font-size="9" text-anchor="middle" font-weight="700">Co</text>
+    <rect x="42" y="481" width="100" height="28" rx="8" fill="#21262d"/>
+    <circle cx="62" cy="496" r="4" fill="#8b949e" opacity="0.9">
+      <animate attributeName="opacity" values="0.9;0.3;0.9" dur="1.2s" repeatCount="indefinite" begin="0s"/>
+    </circle>
+    <circle cx="76" cy="496" r="4" fill="#8b949e" opacity="0.9">
+      <animate attributeName="opacity" values="0.9;0.3;0.9" dur="1.2s" repeatCount="indefinite" begin="0.4s"/>
+    </circle>
+    <circle cx="90" cy="496" r="4" fill="#8b949e" opacity="0.9">
+      <animate attributeName="opacity" values="0.9;0.3;0.9" dur="1.2s" repeatCount="indefinite" begin="0.8s"/>
+    </circle>
+
+    <!-- Input area -->
+    <rect x="0" y="548" width="360" height="82" fill="#161b22"/>
+    <rect y="548" width="360" height="1" fill="#30363d"/>
+    <rect x="10" y="560" width="340" height="50" rx="8" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
+    <text x="22" y="590" fill="#6e7681" font-size="12">Describe changes to refine…</text>
+    <rect x="316" y="566" width="28" height="28" rx="6" fill="url(#copilot-grad)"/>
+    <text x="330" y="584" fill="white" font-size="14" text-anchor="middle">↑</text>
+
+    <!-- ── Right panel (Monaco editor) ───────────────────────────────── -->
+    <!-- Editor tabs -->
+    <rect x="361" y="92" width="839" height="38" fill="#161b22"/>
+    <rect x="361" y="130" width="839" height="1" fill="#30363d"/>
+    <rect x="361" y="92" width="80" height="38" fill="#0d1117"/>
+    <text x="401" y="116" fill="#e6edf3" font-size="12" text-anchor="middle">Code</text>
+    <rect x="361" y="129" width="80" height="2" fill="#58a6ff"/>
+    <text x="490" y="116" fill="#8b949e" font-size="12">Preview</text>
+    <!-- Copy button -->
+    <rect x="1100" y="101" width="52" height="22" rx="4" fill="none" stroke="#30363d" stroke-width="1"/>
+    <text x="1126" y="116" fill="#8b949e" font-size="11" text-anchor="middle">Copy</text>
+    <!-- Download button -->
+    <rect x="1158" y="101" width="32" height="22" rx="4" fill="none" stroke="#30363d" stroke-width="1"/>
+    <text x="1174" y="116" fill="#8b949e" font-size="11" text-anchor="middle">↓</text>
+
+    <!-- Editor background -->
+    <rect x="361" y="131" width="839" height="499" fill="#0d1117"/>
+
+    <!-- Line numbers -->
+    <rect x="361" y="131" width="44" height="499" fill="#0d1117"/>
+    <text x="396" y="158" fill="#3d444d" font-size="12" text-anchor="end">1</text>
+    <text x="396" y="176" fill="#3d444d" font-size="12" text-anchor="end">2</text>
+    <text x="396" y="194" fill="#3d444d" font-size="12" text-anchor="end">3</text>
+    <text x="396" y="212" fill="#3d444d" font-size="12" text-anchor="end">4</text>
+    <text x="396" y="230" fill="#3d444d" font-size="12" text-anchor="end">5</text>
+    <text x="396" y="248" fill="#3d444d" font-size="12" text-anchor="end">6</text>
+    <text x="396" y="266" fill="#3d444d" font-size="12" text-anchor="end">7</text>
+    <text x="396" y="284" fill="#3d444d" font-size="12" text-anchor="end">8</text>
+    <text x="396" y="302" fill="#3d444d" font-size="12" text-anchor="end">9</text>
+    <text x="396" y="320" fill="#3d444d" font-size="12" text-anchor="end">10</text>
+    <text x="396" y="338" fill="#3d444d" font-size="12" text-anchor="end">11</text>
+    <text x="396" y="356" fill="#3d444d" font-size="12" text-anchor="end">12</text>
+    <text x="396" y="374" fill="#3d444d" font-size="12" text-anchor="end">13</text>
+    <text x="396" y="392" fill="#3d444d" font-size="12" text-anchor="end">14</text>
+    <text x="396" y="410" fill="#3d444d" font-size="12" text-anchor="end">15</text>
+    <text x="396" y="428" fill="#3d444d" font-size="12" text-anchor="end">16</text>
+    <text x="396" y="446" fill="#3d444d" font-size="12" text-anchor="end">17</text>
+    <text x="396" y="464" fill="#3d444d" font-size="12" text-anchor="end">18</text>
+    <text x="396" y="482" fill="#3d444d" font-size="12" text-anchor="end">19</text>
+    <text x="396" y="500" fill="#3d444d" font-size="12" text-anchor="end">20</text>
+    <text x="396" y="518" fill="#3d444d" font-size="12" text-anchor="end">21</text>
+    <text x="396" y="536" fill="#3d444d" font-size="12" text-anchor="end">22</text>
+    <text x="396" y="554" fill="#3d444d" font-size="12" text-anchor="end">23</text>
+    <text x="396" y="572" fill="#3d444d" font-size="12" text-anchor="end">24</text>
+    <text x="396" y="590" fill="#3d444d" font-size="12" text-anchor="end">25</text>
+    <rect x="405" y="131" width="1" height="499" fill="#21262d"/>
+
+    <!-- Code content -->
+    <text x="418" y="158" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">&lt;!DOCTYPE html&gt;</text>
+    <text x="418" y="176" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">&lt;<tspan fill="#7ee787">html</tspan> <tspan fill="#79c0ff">lang</tspan>=<tspan fill="#a5d6ff">"en"</tspan>&gt;</text>
+    <text x="418" y="194" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">&lt;<tspan fill="#7ee787">head</tspan>&gt;</text>
+    <text x="418" y="212" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">  &lt;<tspan fill="#7ee787">meta</tspan> <tspan fill="#79c0ff">charset</tspan>=<tspan fill="#a5d6ff">"UTF-8"</tspan>&gt;</text>
+    <text x="418" y="230" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">  &lt;<tspan fill="#7ee787">style</tspan>&gt;</text>
+    <text x="418" y="248" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">    <tspan fill="#ff7b72">body</tspan> {</text>
+    <text x="418" y="266" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">      <tspan fill="#79c0ff">background</tspan>: <tspan fill="#a5d6ff">#0d1117</tspan>; <tspan fill="#79c0ff">color</tspan>: <tspan fill="#a5d6ff">#e6edf3</tspan>;</text>
+    <text x="418" y="284" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">      <tspan fill="#79c0ff">font-family</tspan>: <tspan fill="#a5d6ff">-apple-system, sans-serif</tspan>;</text>
+    <text x="418" y="302" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">    }</text>
+    <text x="418" y="320" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">    <tspan fill="#ff7b72">.settings-page</tspan> {</text>
+    <text x="418" y="338" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">      <tspan fill="#79c0ff">max-width</tspan>: <tspan fill="#a5d6ff">800px</tspan>; <tspan fill="#79c0ff">margin</tspan>: <tspan fill="#a5d6ff">0 auto</tspan>; <tspan fill="#79c0ff">padding</tspan>: <tspan fill="#a5d6ff">24px</tspan>;</text>
+    <text x="418" y="356" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">    }</text>
+    <text x="418" y="374" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">    <tspan fill="#ff7b72">.section</tspan> {</text>
+    <text x="418" y="392" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">      <tspan fill="#79c0ff">background</tspan>: <tspan fill="#a5d6ff">#161b22</tspan>;</text>
+    <text x="418" y="410" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">      <tspan fill="#79c0ff">border</tspan>: <tspan fill="#a5d6ff">1px solid #30363d</tspan>;</text>
+    <text x="418" y="428" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">      <tspan fill="#79c0ff">border-radius</tspan>: <tspan fill="#a5d6ff">8px</tspan>; <tspan fill="#79c0ff">padding</tspan>: <tspan fill="#a5d6ff">16px 20px</tspan>;</text>
+    <text x="418" y="446" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">    }</text>
+    <text x="418" y="464" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">    <tspan fill="#ff7b72">.danger-zone</tspan> {</text>
+    <text x="418" y="482" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">      <tspan fill="#79c0ff">border-color</tspan>: <tspan fill="#a5d6ff">#f8514940</tspan>;</text>
+    <text x="418" y="500" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">    }</text>
+    <text x="418" y="518" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">  &lt;/<tspan fill="#7ee787">style</tspan>&gt;</text>
+    <text x="418" y="536" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">&lt;/<tspan fill="#7ee787">head</tspan>&gt;</text>
+    <text x="418" y="554" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">&lt;<tspan fill="#7ee787">body</tspan>&gt;</text>
+    <text x="418" y="572" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">  &lt;<tspan fill="#7ee787">div</tspan> <tspan fill="#79c0ff">class</tspan>=<tspan fill="#a5d6ff">"settings-page"</tspan>&gt;</text>
+    <text x="418" y="590" fill="#8b949e" font-size="12" font-family="'Cascadia Code', 'Fira Code', monospace">    &lt;<tspan fill="#7ee787">h1</tspan>&gt;<tspan fill="#e6edf3">Settings</tspan>&lt;/<tspan fill="#7ee787">h1</tspan>&gt;</text>
+
+    <!-- Cursor blink on last line -->
+    <rect x="502" y="579" width="2" height="14" fill="#e6edf3" opacity="0.8">
+      <animate attributeName="opacity" values="0.8;0;0.8" dur="1s" repeatCount="indefinite"/>
+    </rect>
+
+    <!-- Fade out at bottom -->
+    <defs>
+      <linearGradient id="fade-bottom" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" style="stop-color:#0d1117;stop-opacity:0"/>
+        <stop offset="100%" style="stop-color:#0d1117;stop-opacity:1"/>
+      </linearGradient>
+    </defs>
+    <rect x="361" y="565" width="839" height="65" fill="url(#fade-bottom)"/>
+
+    <!-- Screen border -->
+    <rect width="1200" height="630" rx="10" fill="none" stroke="#30363d" stroke-width="1"/>
+  </g>
+</svg>
