@@ -129,6 +129,22 @@ resource "azurerm_key_vault_access_policy" "app" {
   depends_on = [azurerm_linux_web_app.this]
 }
 
+resource "azurerm_key_vault_secret" "openai_key" {
+  name         = "openai-key"
+  value        = azurerm_cognitive_account.openai.primary_access_key
+  key_vault_id = azurerm_key_vault.this.id
+
+  depends_on = [azurerm_key_vault_access_policy.deployer]
+}
+
+resource "azurerm_key_vault_secret" "cosmos_key" {
+  name         = "cosmos-key"
+  value        = azurerm_cosmosdb_account.this.primary_key
+  key_vault_id = azurerm_key_vault.this.id
+
+  depends_on = [azurerm_key_vault_access_policy.deployer]
+}
+
 resource "azurerm_key_vault_secret" "github_client_secret" {
   name         = "github-client-secret"
   value        = var.github_client_secret
@@ -198,21 +214,21 @@ resource "azurerm_linux_web_app" "this" {
   }
 
   app_settings = {
-    # Azure OpenAI
+    # Azure OpenAI — key resolved from Key Vault at runtime
     AZURE_OPENAI_ENDPOINT    = azurerm_cognitive_account.openai.endpoint
-    AZURE_OPENAI_KEY         = azurerm_cognitive_account.openai.primary_access_key
+    AZURE_OPENAI_KEY         = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.openai_key.versionless_id})"
     AZURE_OPENAI_DEPLOYMENT  = azurerm_cognitive_deployment.gpt4o.name
     AZURE_OPENAI_API_VERSION = "2024-02-01"
 
-    # Cosmos DB
+    # Cosmos DB — key resolved from Key Vault at runtime
     COSMOS_ENDPOINT = azurerm_cosmosdb_account.this.endpoint
-    COSMOS_KEY      = azurerm_cosmosdb_account.this.primary_key
+    COSMOS_KEY      = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.cosmos_key.versionless_id})"
 
-    # GitHub OAuth — secret pulled from Key Vault at runtime via App Service Key Vault reference
+    # GitHub OAuth — secret resolved from Key Vault at runtime
     GITHUB_CLIENT_ID     = var.github_client_id
     GITHUB_CLIENT_SECRET = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.github_client_secret.versionless_id})"
 
-    # JWT session signing — also from Key Vault
+    # JWT session signing — resolved from Key Vault at runtime
     JWT_SECRET = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.jwt_secret.versionless_id})"
 
     # Node runtime
@@ -239,5 +255,10 @@ resource "azurerm_linux_web_app" "this" {
     }
   }
 
-  depends_on = [azurerm_key_vault_secret.github_client_secret, azurerm_key_vault_secret.jwt_secret]
+  depends_on = [
+    azurerm_key_vault_secret.openai_key,
+    azurerm_key_vault_secret.cosmos_key,
+    azurerm_key_vault_secret.github_client_secret,
+    azurerm_key_vault_secret.jwt_secret,
+  ]
 }

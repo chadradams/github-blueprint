@@ -40,7 +40,7 @@ output "app_insights_connection_string" {
 }
 
 output "env_local_snippet" {
-  description = "Ready-to-paste .env.local block for local development."
+  description = "Ready-to-paste .env.local block for local development. Production uses Key Vault references instead of these raw values."
   sensitive   = true
   value       = <<-EOT
     AZURE_OPENAI_ENDPOINT=${azurerm_cognitive_account.openai.endpoint}
@@ -52,7 +52,7 @@ output "env_local_snippet" {
     COSMOS_KEY=${azurerm_cosmosdb_account.this.primary_key}
 
     GITHUB_CLIENT_ID=${var.github_client_id}
-    GITHUB_CLIENT_SECRET=<from Key Vault or terraform.tfvars>
-    JWT_SECRET=<from Key Vault or terraform.tfvars>
+    GITHUB_CLIENT_SECRET=${var.github_client_secret}
+    JWT_SECRET=${var.jwt_secret}
   EOT
 }
